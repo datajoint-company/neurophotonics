@@ -35,7 +35,7 @@ class Space:
         self.absorb_ratio = self.mui/self.mu  # probability of absoprtion at each hop
         self.anisotropy = anisotropy  # For the Henyey-Greenstein formula
         self.beam_compression = beam_compression
-        self.beam_xy_aspect = beam_xy_aspect
+        self.beam_xy_aspect = beam_xy_aspect   # 2.0 means squeeze y by factor of 2.0
         self.y_steer = y_steer  # (radians) steer angle in the plane of the shank
 
         self.volume = np.zeros(self.dims, dtype='float32') # x, y, z
@@ -79,7 +79,7 @@ class Space:
             if self.beam_compression < 1:
                 elev_sin = np.sin(np.arcsin(elev_sin) * self.beam_compression)
             if self.beam_xy_aspect != 1:
-                azi_sin = np.arcsin(azi_sin) / self.beam_xy_aspect
+                azi_sin = np.sin(np.arcsin(azi_sin) / self.beam_xy_aspect)
                 azi_cos = np.sign(azi_cos) * np.sqrt(1 - azi_sin*azi_sin)
             vx, vy, vz = elev_sin*azi_cos, elev_sin*azi_sin, np.sqrt(1-elev_sin*elev_sin)
             
@@ -106,6 +106,8 @@ class Space:
             return np.maximum(0, np.sign(self.directions[:,2])) # along z-axis
         if self.detector_type == "narrowed":
             return np.maximum(0, self.directions[:,2])**4  # along z-axis
+        if self.detector_type == "narrowed2":
+            return np.maximum(0, self.directions[:,2])**2  # along z-axis
         raise Exception('Unknown detector type')
         
         

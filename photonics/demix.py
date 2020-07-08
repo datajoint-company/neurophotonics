@@ -42,7 +42,7 @@ class IlluminationCycle(dj.Computed):
             [np.float32(x) 
              for x in (Detection.Detector & key).fetch('detect_probabilities')])   #  detectors x sources
 
-        target_rank = 130_000
+        target_rank = 150_000
 
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
         nframes = int(np.ceil(target_rank / detection.shape[0]))
@@ -71,6 +71,7 @@ class Demix(dj.Computed):
     -> IlluminationCycle
     -> Sample
     ---
+    selection : longblob  # selected cells
     mix_norm : longblob    #  cell's mixing vector norm
     demix_norm : longblob  #  cell's demixing vector norm
     bias_norm : longblob  #  cell's bias vector norm
@@ -87,21 +88,21 @@ class Demix(dj.Computed):
         npoints, volume = (Tissue & key).fetch1('npoints', 'volume')
         target_density = (Sample & key).fetch1('density')
 
-        select_points = np.r_[:npoints] < int(np.round(target_density) * volume)
+        selection = np.r_[:npoints] < int(np.round(target_density) * volume)
         np.random.seed(seed)
-        np.random.shuffle(select_points)
+        np.random.shuffle(selection)
 
         illumination = (IlluminationCycle & key).fetch1('illumination')
         nframes = illumination.shape[0]
         illumination = illumination * power / nframes   
 
         emission = np.stack(
-            [np.float32(x[select_points]) 
+            [np.float32(x[selection]) 
              for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  #  emitters x sources
         emission = dt * illumination @ emission  # photons per frame
 
         detection = np.stack(
-            [np.float32(x[select_points]) 
+            [np.float32(x[selection]) 
              for x in (Detection.Detector & key).fetch('detect_probabilities')])   #  detectors x sources
         
         # construct the mixing matrix mix: nchannels x ncells
@@ -135,6 +136,7 @@ class Demix(dj.Computed):
         
         self.insert1(dict(
             key, 
+			selection=selection,
             mix_norm=np.linalg.norm(mix, axis=0), 
             demix_norm=np.linalg.norm(demix, axis=1), 
             bias_norm=np.linalg.norm(bias, axis=1),
@@ -153,7 +155,7 @@ class Cosine(dj.Computed):
         max_bias = 0.01
         mix, demix, bias = (Demix & key).fetch1('mix_norm', 'demix_norm', 'bias_norm')
         cosines=(bias < max_bias) / (mix * demix)
-        self.insert1(dict(key, cosines))
+        self.insert1(dict(key, cosines=cosines))
 
 
 @schema
@@ -169,7 +171,7 @@ class SpikeSNR(dj.Computed):
         delta = 0.1
         tau = 0.2
         dt = 0.02  # must match the one in Demix
-        demix_norm, bias = (Demix & key).fetch1('mix_norm', 'demix_norm', 'bias_norm')
+        demix_norm, bias = (Demix & key).fetch1('demix_norm', 'bias_norm')
         rho = np.exp(-2*np.r_[0:6*tau:dt]/tau).sum()   # SNR improvement by matched filter
         snr = (bias < max_bias) * rho * delta/demix_norm
         self.insert1(dict(key, snr=snr))

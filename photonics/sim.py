@@ -69,7 +69,7 @@ class Fluorescence(dj.Computed):
         """
         
     def make(self, key):
-        neuron_cross_section = 1e-5  # um^2
+        neuron_cross_section = 1e-4  # um^2
         photons_per_joule = 1/(2.8*1.6e-19)   # 2.8 eV blue photons 
         cell_xyz = (Tissue & key).fetch1('cell_xyz')
         self.insert1(key)
@@ -119,12 +119,12 @@ class Detection(dj.Computed):
         cell_xyz = (Tissue & key).fetch1('cell_xyz')
         self.insert1(key)
         for dsim_key in (DSim & (Geometry.Detector & key)).fetch('KEY'):
-            volume, pitch, *dims  = (DField * DSim & dsim_key).fetch1(
-            'volume', 'pitch', 'volume_dimx', 'volume_dimy', 'volume_dimz')
+            volume, pitch, *dims  = (DField * DSim & dsim_key).fetch1('volume', 'pitch', 'volume_dimx', 'volume_dimy', 'volume_dimz')
+            volume *= 0.5 / volume.max()  #  just in case. Max detection should already be ~0.5. Update after additional sim verifications
             dims = np.array(dims)
             for detect_key in tqdm.tqdm((Geometry.Detector & key & dsim_key).fetch('KEY')):
                 # cell positions in volume coordinates
-                detect = (Geometry.Detector & detect_key)
+                detect = Geometry.Detector & detect_key
                 d_xyz = detect.fetch1('d_center_x', 'd_center_y', 'd_center_z')
                 z_basis = np.array(detect.fetch1('d_norm_x', 'd_norm_y', 'd_norm_z'))
                 y_basis = np.array(detect.fetch1('d_top_x', 'd_top_y', 'd_top_z'))
@@ -137,7 +137,7 @@ class Detection(dj.Computed):
                     0 <= q[0] < dims[0] and 
                     0 <= q[1] < dims[1] and 
                     0 <= q[2] < dims[2] else 0 for q in vxyz])
-                self.Detector.insert1(
-                    dict(key, **detect_key, 
+                self.Detector().insert1(
+                    dict(key, **detect_key,
                          detect_probabilities = np.float32(v),
                          mean_probability = v.sum()))
