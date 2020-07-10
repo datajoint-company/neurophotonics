@@ -53,6 +53,16 @@ class Design(dj.Lookup):
          "Design4/matrix_steer_and_collect_a1_b3_v3_16-06-02", 
          "steer_coll_a1_b3_beams_as_emitters_geometry.csv", (550, 510, 0), 
          (30, 31, 32, 33, 34, 35, 36, 37, 38), (3,)),
+        (9, "Shaped fields with 30-degree-collection cones",
+         "50 emitters per shank, 30-degree emission detection fields",
+         "Design4/matrix_steer_and_collect_a1_b3_v3_16-06-02",
+         "steer_coll_a1_b3_beams_as_emitters_geometry.csv", (550, 510, 0),
+         (10, 11, 12, 13, 14, 15, 16, 17, 18), (2,)),
+        (10, "Shaped fields with 30-degree-collection cones",
+         "50 emitters per shank, 30-degree emission detection fields",
+         "Design4/matrix_steer_and_collect_a1_b3_v3_16-06-02",
+         "steer_coll_a1_b3_beams_as_emitters_geometry.csv", (550, 510, 0),
+         (10, 11, 12, 13, 14, 15, 16, 17, 18), (4,)),
     ]
 
 
@@ -121,9 +131,9 @@ class Geometry(dj.Imported):
                 rec.update(zip(('d_center_x','d_center_y','d_center_z'), 
                                (float(i)-offset for i, offset in zip(match['center'].split(','), origin))))
                 if key['design'] == 1:
-                    rec.update(zip(('d_norm_x','d_norm_y','d_norm_z'), 
+                    rec.update(zip(('d_norm_x', 'd_norm_y', 'd_norm_z'),
                                    (float(i) for i in match['normal'].split(','))))
-                    rec.update(zip(('d_top_x','d_top_y','d_top_z'), 
+                    rec.update(zip(('d_top_x', 'd_top_y', 'd_top_z'),
                                    (float(i) for i in match['top'].split(','))))
                 else:
                     azimuth = (rec['d_center_z'] - 5)*np.pi*9/40 + np.pi/16
@@ -138,8 +148,8 @@ class Geometry(dj.Imported):
                     d_width=float(match['width']),
                     d_thick=float(match['thick']))
                 if rec != last_rec:
-                    self.Detector.insert(dict(rec, dsim=dfield, detector=next(d_count)) 
-                                for dfield in dfields)
+                    self.Detector().insert(dict(rec, dsim=dfield, detector=next(d_count))
+                                           for dfield in dfields)
                     last_rec = rec
                 continue
                 
@@ -147,16 +157,18 @@ class Geometry(dj.Imported):
             match = emitter_pattern.match(line)
             if match:
                 rec = dict(key)
-                rec.update(zip(('e_center_x','e_center_y','e_center_z'), 
+                rec.update(zip(('e_center_x', 'e_center_y', 'e_center_z'),
                                (float(i)-offset for i, offset in zip(match['center'].split(','), origin))))
                 if key['design'] == 1:
-                    rec.update(zip(('e_norm_x','e_norm_y','e_norm_z'), 
+                    rec.update(zip(('e_norm_x', 'e_norm_y', 'e_norm_z'),
                                    (float(i) for i in match['normal'].split(','))))
-                    rec.update(zip(('e_top_x','e_top_y','e_top_z'), 
+                    rec.update(zip(('e_top_x', 'e_top_y', 'e_top_z'),
                                    (float(i) for i in match['top'].split(','))))
                 else:
                     azimuth = (rec['e_center_z'] - 5)*np.pi*9/40 + np.pi/16
-                    rec.update(e_norm_x=np.cos(azimuth), 
+                    if key['design'] >= 9:
+                        azimuth += np.pi
+                    rec.update(e_norm_x=np.cos(azimuth),
                                e_norm_y=np.sin(azimuth), 
                                e_norm_z=0,
                                e_top_x=0,
@@ -168,8 +180,8 @@ class Geometry(dj.Imported):
                     e_width=float(match['width']),
                     e_thick=float(match['thick']))
                 if rec != last_rec:
-                    self.Emitter.insert(
-                        dict(rec, esim=efield, emitter=next(e_count)) 
+                    self.Emitter().insert(
+                        dict(rec, esim=efield, emitter=next(e_count))
                         for efield in efields)
                     last_rec = rec
                 continue

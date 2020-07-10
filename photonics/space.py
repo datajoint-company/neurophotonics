@@ -62,7 +62,6 @@ class Space:
         else:
             raise Exception('Invalid emitter shape')
         self.positions[photons_to_replace, :] = positions
-            
         
         # generate directions
         if self.emitter_spread == "parallel":
@@ -103,13 +102,14 @@ class Space:
         if self.detector_type == "total":  # use for emission field modeling
             return 1.0   
         if self.detector_type == "one-sided":  # equivalent to a lambertian emitter
-            return np.maximum(0, np.sign(self.directions[:,2])) # along z-axis
+            return np.maximum(0, np.sign(self.directions[:, 2])) # along z-axis
         if self.detector_type == "narrowed":
-            return np.maximum(0, self.directions[:,2])**4  # along z-axis
+            return np.maximum(0, self.directions[:, 2])**4  # along z-axis
         if self.detector_type == "narrowed2":
-            return np.maximum(0, self.directions[:,2])**2  # along z-axis
+            return np.maximum(0, self.directions[:, 2])**2  # along z-axis
+        if self.detector_type == "narrowed8":
+            return np.maximum(0, self.directions[:, 2])**8  # along z-axis
         raise Exception('Unknown detector type')
-        
         
     def accumulate(self, start_points, end_points, lengths):
         """
@@ -125,8 +125,7 @@ class Space:
             positions = positions[keep, :]
             indices = np.ravel_multi_index((positions[:,0], positions[:,1], positions[:,2]), self.volume.shape)
             self.volume.ravel()[indices] += (self.detector_sensitivity() * lengths)[keep] / samples / self.pitch**3
-            
-        
+
     def hop(self):
         """
         execute photon hops between events, updating the irradition field
@@ -155,15 +154,13 @@ class Space:
         v += gsin[:,None] / np.sqrt((d**2).sum(axis=1, keepdims=True)) * d  # match length to gsin
         v /= np.sqrt((v**2).sum(axis=1, keepdims=True))  # normalize
         self.directions[scattered, :] = v
-        
-        
+
     def run(self, hops=100):
         self.emit(np.ones(self.n, dtype=np.bool))
         for _ in tqdm.tqdm(range(hops), miniters=20):
             self.hop()
         # at the end, the values in volumes depict the photon flux per um^2 per emitted photons
-        self.volume /= self.total_count  
-            
+        self.volume /= self.total_count
       
     def plot(self, axis=None, title="", gamma=0.5, cmap='gray'):
         if axis is None:

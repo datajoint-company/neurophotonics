@@ -1,6 +1,5 @@
 import numpy as np
 
-from scipy.spatial import distance
 import tqdm
 
 import datajoint as dj
@@ -51,7 +50,7 @@ class IlluminationCycle(dj.Computed):
         qq = qq @ qq.T
 
         # combine illumination patterns with minimum overlap
-        for _ in range(illumination.shape[0] - nframes):
+        for _ in tqdm.tqdm(range(illumination.shape[0] - nframes)):
             i, j = np.triu_indices(qq.shape[1], 1)
             ix = np.argmin(qq[i, j])
             i, j = i[ix], j[ix]
@@ -135,9 +134,9 @@ class Demix(dj.Computed):
         bias = demix @ mix - identity
         
         self.insert1(dict(
-            key, 
-			selection=selection,
-            mix_norm=np.linalg.norm(mix, axis=0), 
+            key,
+            selection=selection,
+            mix_norm=np.linalg.norm(mix, axis=0),
             demix_norm=np.linalg.norm(demix, axis=1), 
             bias_norm=np.linalg.norm(bias, axis=1),
             trans_bias_norm=np.linalg.norm(bias, axis=0)))
@@ -153,8 +152,8 @@ class Cosine(dj.Computed):
     
     def make(self, key):
         max_bias = 0.01
-        mix, demix, bias = (Demix & key).fetch1('mix_norm', 'demix_norm', 'bias_norm')
-        cosines=(bias < max_bias) / (mix * demix)
+        mix_norm, demix_norm, bias_norm = (Demix & key).fetch1('mix_norm', 'demix_norm', 'bias_norm')
+        cosines = (bias_norm < max_bias) / (mix_norm * demix_norm)
         self.insert1(dict(key, cosines=cosines))
 
 
@@ -169,7 +168,7 @@ class SpikeSNR(dj.Computed):
     def make(self, key):
         max_bias = 0.01
         delta = 0.1
-        tau = 0.2
+        tau = 1.0
         dt = 0.02  # must match the one in Demix
         demix_norm, bias = (Demix & key).fetch1('demix_norm', 'bias_norm')
         rho = np.exp(-2*np.r_[0:6*tau:dt]/tau).sum()   # SNR improvement by matched filter

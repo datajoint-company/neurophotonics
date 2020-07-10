@@ -31,9 +31,12 @@ class DSim(dj.Lookup):
         dict(dsim=1, detector_type='one-sided', detector_height=20,
              dsim_description='100% Efficient Lambertian 10x20 rect'),
         dict(dsim=2, detector_type='narrowed', detector_height=20,
-             dsim_description="Narrow selective as 4th power of cosine, 10x10 rect"),
+             dsim_description="Narrow selective as 4th power of cosine, 10x20 rect"),
         dict(dsim=3, detector_type='narrowed2', detector_height=20,
-             dsim_description="Narrow selective as 2th power of cosine, 10x20 rect")]
+             dsim_description="Narrow selective as 2th power of cosine, 10x20 rect"),
+        dict(dsim=4, detector_type='narrowed8', detector_height=20,
+             dsim_description="Narrow selective as 8th power of cosine, 10x20 rect")]
+       
 
 
 @schema
