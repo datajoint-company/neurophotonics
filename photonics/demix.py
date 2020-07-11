@@ -41,7 +41,7 @@ class IlluminationCycle(dj.Computed):
             [np.float32(x) 
              for x in (Detection.Detector & key).fetch('detect_probabilities')])   #  detectors x sources
 
-        target_rank = 150_000
+        target_rank = 120_000
 
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
         nframes = int(np.ceil(target_rank / detection.shape[0]))
