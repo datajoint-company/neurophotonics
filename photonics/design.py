@@ -63,6 +63,11 @@ class Design(dj.Lookup):
          "Design4/matrix_steer_and_collect_a1_b3_v3_16-06-02",
          "steer_coll_a1_b3_beams_as_emitters_geometry.csv", (550, 510, 0),
          (10, 11, 12, 13, 14, 15, 16, 17, 18), (4,)),
+        (11, "Shaped fields with 30-degree-collection cones",
+         "50 emitters per shank, 30-degree emission detection fields",
+         "Design4/matrix_steer_and_collect_a1_b3_v3_16-06-02",
+         "steer_coll_a1_b3_beams_as_emitters_geometry.csv", (550, 510, 0),
+         (11, 12, 13, 14, 15, 16, 17), (4,)),
     ]
 
 
@@ -131,8 +136,7 @@ class Geometry(dj.Imported):
                 rec.update(zip(('d_center_x','d_center_y','d_center_z'), 
                                (float(i)-offset for i, offset in zip(match['center'].split(','), origin))))
                 if key['design'] == 1:
-                    rec.update(zip(('d_norm_x', 'd_norm_y', 'd_norm_z'),
-                                   (float(i) for i in match['normal'].split(','))))
+                    rec.update(zip(('d_norm_x', 'd_norm_y', 'd_norm_z'), (float(i) for i in match['normal'].split(','))))
                     rec.update(zip(('d_top_x', 'd_top_y', 'd_top_z'),
                                    (float(i) for i in match['top'].split(','))))
                 else:
