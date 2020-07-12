@@ -41,7 +41,7 @@ class IlluminationCycle(dj.Computed):
             [np.float32(x) 
              for x in (Detection.Detector & key).fetch('detect_probabilities')])   #  detectors x sources
 
-        target_rank = 120_000
+        target_rank = 140_000
 
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
         nframes = int(np.ceil(target_rank / detection.shape[0]))
@@ -75,11 +75,12 @@ class Demix(dj.Computed):
     demix_norm : longblob  #  cell's demixing vector norm
     bias_norm : longblob  #  cell's bias vector norm
     trans_bias_norm : longblob # don't use. Saved just in case of wrong axis choice
+    avg_emitter_power : float  # (uW) when on
     """
     
     def make(self, key):
         dt = 0.02   # (s) sample duration (one illumination cycle)
-        power = 1e-4   # 100 uW
+        power = 0.04  #  Total milliwatts to the brain
         dark_noise = 300  # counts per second
         seed = 0
 
@@ -93,7 +94,8 @@ class Demix(dj.Computed):
 
         illumination = (IlluminationCycle & key).fetch1('illumination')
         nframes = illumination.shape[0]
-        illumination = illumination * power / nframes   
+        illumination = power * illumination / illumination.sum()   # watts averaged over the entire cycle
+        avg = nframes * illumination[illumination > 0].mean()
 
         emission = np.stack(
             [np.float32(x[selection]) 
@@ -136,6 +138,7 @@ class Demix(dj.Computed):
         self.insert1(dict(
             key,
             selection=selection,
+            avg_emitter_power=avg * 1e6,
             mix_norm=np.linalg.norm(mix, axis=0),
             demix_norm=np.linalg.norm(demix, axis=1), 
             bias_norm=np.linalg.norm(bias, axis=1),
