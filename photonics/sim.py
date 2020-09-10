@@ -2,10 +2,9 @@ import numpy as np
 from scipy.spatial import distance
 import datajoint as dj
 import tqdm
-from .sim import Tissue
-from .design import Geometry
 
 schema = dj.schema('photonics')
+schema.spawn_missing_classes()
 
 
 @schema

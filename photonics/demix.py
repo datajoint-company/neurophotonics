@@ -170,7 +170,7 @@ class SpikeSNR(dj.Computed):
     
     def make(self, key):
         max_bias = 0.01
-        delta = 0.1
+        delta = 0.3*0.4
         tau = 1.0
         dt = 0.02  # must match the one in Demix
         demix_norm, bias = (Demix & key).fetch1('demix_norm', 'bias_norm')
