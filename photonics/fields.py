@@ -26,16 +26,13 @@ class DSim(dj.Lookup):
     """
 
     contents = [
-        dict(dsim=0, detector_type='one-sided', detector_height=50,
-             dsim_description='100% Efficient Lambertian 10x50 rect'),
-        dict(dsim=1, detector_type='one-sided', detector_height=20,
-             dsim_description='100% Efficient Lambertian 10x20 rect'),
-        dict(dsim=2, detector_type='narrowed', detector_height=20,
-             dsim_description="Narrow selective as 4th power of cosine, 10x20 rect"),
-        dict(dsim=3, detector_type='narrowed2', detector_height=20,
-             dsim_description="Narrow selective as 2th power of cosine, 10x20 rect"),
-        dict(dsim=4, detector_type='narrowed8', detector_height=20,
-             dsim_description="Narrow selective as 8th power of cosine, 10x20 rect")]
+        dict(dsim=0, detector_type='one-sided', detector_height=50, scatter_length=100,     absorption_length=14000, dsim_description='100% Efficient Lambertian 10x50 rect'),
+        dict(dsim=1, detector_type='one-sided', detector_height=20, scatter_length=100,     absorption_length=14000, dsim_description='100% Efficient Lambertian 10x20 rect'),
+        dict(dsim=2, detector_type='narrowed',  detector_height=20, scatter_length=100,     absorption_length=14000, dsim_description="Narrow selective as 4th power of cosine, 10x20 rect"),
+        dict(dsim=3, detector_type='narrowed2', detector_height=20, scatter_length=100,     absorption_length=14000, dsim_description="Narrow selective as 2th power of cosine, 10x20 rect"),
+        dict(dsim=4, detector_type='narrowed8', detector_height=20, scatter_length=100,     absoprtion_length=14000,  dsim_description="Narrow selective as 8th power of cosine, 10x20 rect"),
+	]
+DSim.insert1(dict(dsim=5, detector_type='narrowed8', detector_height=20, scatter_length=1000/21, absorption_length=1000/0.062, dsim_description="Narrow selective as 8th power of cosine, 10x20 rect"), skip_duplicates=True)
        
 
 
@@ -136,7 +133,17 @@ class ESim(dj.Lookup):
         dict(esim=36, esim_description="Narrowed to pi/3, steered +pi/6", beam_compression=1/4, y_steer=+np.pi / 6, beam_xy_aspect=2.0),
         dict(esim=37, esim_description="Narrowed to pi/3, steered +pi/4", beam_compression=1/4, y_steer=+np.pi / 4, beam_xy_aspect=2.0),
         dict(esim=38, esim_description="Narrowed to pi/3, steered +pi/3", beam_compression=1/4, y_steer=+np.pi / 3, beam_xy_aspect=2.0),
-    ]
+	]
+
+	
+ESim.insert([
+        dict(esim=51, esim_description="Narrowed to pi/4, steered -18/64*pi", beam_compression=1/4, y_steer=-18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1000/0.062),
+        dict(esim=52, esim_description="Narrowed to pi/4, steered -12/64*pi", beam_compression=1/4, y_steer=-12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+        dict(esim=53, esim_description="Narrowed to pi/4, steered -6/64*pi",  beam_compression=1/4, y_steer=-6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+        dict(esim=54, esim_description="Narrowed to pi/4, steered 0",         beam_compression=1/4, y_steer=0 * np.pi,      beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+        dict(esim=55, esim_description="Narrowed to pi/4, steered +6/64*pi",  beam_compression=1/4, y_steer=+6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+        dict(esim=56, esim_description="Narrowed to pi/4, steered +12/64*pi", beam_compression=1/4, y_steer=+12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+        dict(esim=57, esim_description="Narrowed to pi/4, steered +18/64*pi", beam_compression=1/4, y_steer=+18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062)], skip_duplicates=True)
 
 
 @schema
