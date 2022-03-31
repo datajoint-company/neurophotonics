@@ -2,8 +2,9 @@ import numpy as np
 import datajoint as dj
 from photonics.space import Space
 from matplotlib import pyplot as plt
+from . import db_prefix
 
-schema = dj.schema('photonics')
+schema = dj.schema(db_prefix + 'photonics')
 
 
 @schema

@@ -3,8 +3,9 @@ import pathlib
 import itertools
 import re
 import datajoint as dj
+from . import db_prefix
 
-schema = dj.schema('photonics')
+schema = dj.schema(db_prefix + 'photonics')
 schema.spawn_missing_classes()
 
 

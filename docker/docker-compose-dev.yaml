@@ -1,15 +1,14 @@
-# docker-compose -f ./docker/docker-compose-neurophotonics_worker-DEV.yaml up --build -d
-# docker-compose -f ./docker/docker-compose-neurophotonics_worker-DEV.yaml down
+# docker-compose -f ./docker/docker-compose-dev.yaml up -d
+# docker-compose -f ./docker/docker-compose-dev.yaml up --build -d
+# docker-compose -f ./docker/docker-compose-dev.yaml down
 # Build this image from neurophotonics level on your local machine
 version: '2.4'
 services:
   standard_worker:
     build: # only necessary if rebuilding image
       context: ../../
-      dockerfile: ./neurophotonics/docker/neurophotonics_worker-DEV.Dockerfile
-      args:
-        - DEPLOY_KEY
-    image: registry.vathes.com/sciops/neurophotonics_worker:v0.0.0
+      dockerfile: ./neurophotonics/docker/dev.Dockerfile
+    image: registry.vathes.com/sciops/neurophotonics:v0.0.0
     environment:
       - USER
       - DJ_HOST

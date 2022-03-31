@@ -2,8 +2,9 @@ import numpy as np
 from scipy.spatial import distance
 import datajoint as dj
 import tqdm
+from . import db_prefix
 
-schema = dj.schema('photonics')
+schema = dj.schema(db_prefix + 'photonics')
 schema.spawn_missing_classes()
 
 

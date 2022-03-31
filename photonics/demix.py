@@ -5,7 +5,9 @@ import tqdm
 import datajoint as dj
 import scipy
 
-schema = dj.schema('photonics')
+from . import db_prefix
+
+schema = dj.schema(db_prefix + 'photonics')
 schema.spawn_missing_classes()
 
 
