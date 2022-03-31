@@ -1,4 +1,5 @@
 datajoint
-matplotlib
 numpy
 scipy
+matplotlib
+matplotlib-scalebar
