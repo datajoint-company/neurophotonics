@@ -1,20 +1,17 @@
+import datajoint as dj
 import numpy as np
-
+import scipy
 import tqdm
 
-import datajoint as dj
-import scipy
 
-from . import db_prefix
-
-schema = dj.schema(db_prefix + 'photonics')
+schema = dj.schema(dj.config['custom']['database.prefix'] + 'photonics')
 schema.spawn_missing_classes()
 
 
 @schema
 class Sample(dj.Lookup):
     definition = """
-    sample : tinyint unsigned 
+    sample : tinyint unsigned
     ---
     density : int  # cells per cubic mm
     """
@@ -32,16 +29,15 @@ class IlluminationCycle(dj.Computed):
     nframes  :  smallint unsigned  # number of illumination frames
     illumination : longblob        # frames x emitters
     """
-    
+
     def make(self, key):
-        
         emission = np.stack(
-            [np.float32(x) 
-             for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  #  emitters x sources
-        
+            [np.float32(x)
+             for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  # emitters x sources
+
         detection = np.stack(
-            [np.float32(x) 
-             for x in (Detection.Detector & key).fetch('detect_probabilities')])   #  detectors x sources
+            [np.float32(x)
+             for x in (Detection.Detector & key).fetch('detect_probabilities')])  # detectors x sources
 
         target_rank = 140_000
 
@@ -62,7 +58,7 @@ class IlluminationCycle(dj.Computed):
             qq[:, i] += qq[:, j]
             qq = np.delete(qq, j, 0)
             qq = np.delete(qq, j, 1)
-            
+  
         self.insert1(dict(key, nframes=nframes, illumination=illumination))
 
 
@@ -72,17 +68,17 @@ class Demix(dj.Computed):
     -> IlluminationCycle
     -> Sample
     ---
-    selection : longblob  # selected cells
-    mix_norm : longblob    #  cell's mixing vector norm
-    demix_norm : longblob  #  cell's demixing vector norm
-    bias_norm : longblob  #  cell's bias vector norm
-    trans_bias_norm : longblob # don't use. Saved just in case of wrong axis choice
-    avg_emitter_power : float  # (uW) when on
+    selection         : longblob  # selected cells
+    mix_norm          : longblob  # cell's mixing vector norm
+    demix_norm        : longblob  # cell's demixing vector norm
+    bias_norm         : longblob  # cell's bias vector norm
+    trans_bias_norm   : longblob  # don't use. Saved just in case of wrong axis choice
+    avg_emitter_power : float     # (uW) when on
     """
-    
+
     def make(self, key):
-        dt = 0.02   # (s) sample duration (one illumination cycle)
-        power = 0.04  #  Total milliwatts to the brain
+        dt = 0.02  # (s) sample duration (one illumination cycle)
+        power = 0.04  # Total milliwatts to the brain
         dark_noise = 300  # counts per second
         seed = 0
 
@@ -96,18 +92,18 @@ class Demix(dj.Computed):
 
         illumination = (IlluminationCycle & key).fetch1('illumination')
         nframes = illumination.shape[0]
-        illumination = power * illumination / illumination.sum()   # watts averaged over the entire cycle
+        illumination = power * illumination / illumination.sum()  # watts averaged over the entire cycle
         avg = nframes * illumination[illumination > 0].mean()
 
         emission = np.stack(
-            [np.float32(x[selection]) 
-             for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  #  emitters x sources
+            [np.float32(x[selection])
+             for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  # emitters x sources
         emission = dt * illumination @ emission  # photons per frame
 
         detection = np.stack(
-            [np.float32(x[selection]) 
-             for x in (Detection.Detector & key).fetch('detect_probabilities')])   #  detectors x sources
-        
+            [np.float32(x[selection])
+             for x in (Detection.Detector & key).fetch('detect_probabilities')])  # detectors x sources
+
         # construct the mixing matrix mix: nchannels x ncells
         # mix = number of photons from neuron per frame at full fluorescence
         ncells = detection.shape[1]
@@ -115,34 +111,34 @@ class Demix(dj.Computed):
         nchannels = nframes * ndetectors
         mix = np.ndarray(dtype='float32', shape=(nchannels, ncells))
         for ichannel in range(0, nchannels, ndetectors):
-            mix[ichannel:ichannel + ndetectors] = detection * emission[ichannel//ndetectors]  
+            mix[ichannel:ichannel + ndetectors] = detection * emission[ichannel//ndetectors]
 
         # normalize channels by their noise
         mean_fluorescence = 0.03
         nu = dark_noise * dt / nframes
-        weights = 1/np.sqrt(mix.sum(axis=1, keepdims=True)*mean_fluorescence + nu)  # used to be axis=0
+        weights = 1 / np.sqrt(mix.sum(axis=1, keepdims=True) * mean_fluorescence + nu)  # used to be axis=0
         mix *= weights
-        
+
         # normalization
         kmax = 1e6
         square = mix.T @ mix
         identity = np.identity(mix.shape[1])
         alpha = np.sqrt(scipy.linalg.eigh(
-            square, eigvals_only=True, eigvals=(ncells-1, ncells-1))[0])/(2*kmax)
+            square, eigvals_only=True, eigvals=(ncells-1, ncells-1))[0]) / (2 * kmax)
         square += alpha**2 * identity
-        
-        # demix matrix 
+
+        # demix matrix
         demix = np.linalg.inv(square) @ mix.T
-        
+
         # bias matrix
         bias = demix @ mix - identity
-        
+
         self.insert1(dict(
             key,
             selection=selection,
             avg_emitter_power=avg * 1e6,
             mix_norm=np.linalg.norm(mix, axis=0),
-            demix_norm=np.linalg.norm(demix, axis=1), 
+            demix_norm=np.linalg.norm(demix, axis=1),
             bias_norm=np.linalg.norm(bias, axis=1),
             trans_bias_norm=np.linalg.norm(bias, axis=0)))
 
@@ -154,7 +150,7 @@ class Cosine(dj.Computed):
     ---
     cosines : longblob
     """
-    
+
     def make(self, key):
         max_bias = 0.01
         mix_norm, demix_norm, bias_norm = (Demix & key).fetch1('mix_norm', 'demix_norm', 'bias_norm')
@@ -169,13 +165,13 @@ class SpikeSNR(dj.Computed):
     ---
     snr : longblob
     """
-    
+
     def make(self, key):
         max_bias = 0.01
         delta = 0.3*0.4
         tau = 1.0
         dt = 0.02  # must match the one in Demix
         demix_norm, bias = (Demix & key).fetch1('demix_norm', 'bias_norm')
-        rho = np.exp(-2*np.r_[0:6*tau:dt]/tau).sum()   # SNR improvement by matched filter
+        rho = np.exp(-2*np.r_[0:6 * tau:dt] / tau).sum()  # SNR improvement by matched filter
         snr = (bias < max_bias) * rho * delta/demix_norm
         self.insert1(dict(key, snr=snr))
