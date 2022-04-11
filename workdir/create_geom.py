@@ -7,12 +7,12 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 class Shank:
     def __init__(self, h, w, t):
-        self.h_i = h  # height
-        self.w_i = w  # width
+        self.h_i = h  # height of shank
+        self.w_i = w  # width of shank
         self.t_i = t  # length between flat bottom and tip
 
-        self.h = h  # height
-        self.w = w  # width
+        self.h = h  # height of box
+        self.w = w  # width of box
         self.t = t  # length between flat bottom and tip
         if np.all([h, w, t]):
             self.make_vertices()
@@ -91,19 +91,19 @@ class Shank:
 
     def make_grid(self, sw, sh, th=0):
         # find the greatest number of pixels that can fit on the width of the shank
-        row_count = np.ceil((w_i + sw) / (self.w + sw)) - 1
+        row_count = np.ceil((self.w_i + sw) / (self.w + sw)) - 1
         # find the margin for each side of the row
-        row_margin = (w_i - (row_count * self.w + (row_count - 1) * sw)) / 2
+        row_margin = (self.w_i - (row_count * self.w + (row_count - 1) * sw)) / 2
 
         # find the greatest number of pixels that can fit on the length of the shank
-        column_count = np.ceil((h_i + sh) / (self.h + sh)) - 1
+        column_count = np.ceil((self.h_i + sh) / (self.h + sh)) - 1
         # find the margin for each side of the column
-        column_margin = (h_i - (column_count * self.h + (column_count - 1) * sh)) / 2
+        column_margin = (self.h_i - (column_count * self.h + (column_count - 1) * sh)) / 2
         
         # calculate the x positions for the rows of boxes
-        xs = np.arange(self.bl[0] + row_margin + self.w/2, w_i, self.w + sw)
+        xs = np.arange(self.bl[0] + row_margin + self.w/2, self.w_i, self.w + sw)
         # calculate the z positions for the columns of boxes
-        zs = np.arange(self.bl[1] + column_margin + self.h/2, h_i, self.h + sh)
+        zs = np.arange(self.bl[2] + column_margin + self.h/2, self.h_i, self.h + sh)
 
         # zip xs and zs
         return [[x, th/2, z] for x in xs for z in zs]
