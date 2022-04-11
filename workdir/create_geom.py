@@ -12,9 +12,12 @@ class Shank:
         self.th_i = shank_dimentions[2] # thickness of shank
         self.t_i = shank_dimentions[3]  # length between flat bottom and tip
 
-        self.h = box_dimentions[0]  # height of box
-        self.w = box_dimentions[1]  # width of box
-        if np.all([h_i, w_i, t_i]):
+        self.bh = box_dimentions[0][0]  # height of box
+        self.bw = box_dimentions[1][0]  # width of box
+        self.sh = box_dimentions[0][1] # vertical seperation between boxes
+        self.sw = box_dimentions[1][1] # horizontal sereration between boxes
+
+        if np.all([h_i, w_i, th_i t_i]):
             self.make_vertices()
 
     def reset_position(self):
@@ -89,7 +92,7 @@ class Shank:
     def add_boxes(self, n_box, w, h, pos):
         self.box = []
 
-    def make_grid(self, sw, sh, th=0):
+    def make_grid(self):
         # find the greatest number of pixels that can fit on the width of the shank
         row_count = np.ceil((self.w_i + sw) / (self.w + sw)) - 1
         # find the margin for each side of the row
