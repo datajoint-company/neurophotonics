@@ -6,15 +6,15 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 class Shank:
-    def __init__(self, h, w, t):
-        self.h_i = h  # height of shank
-        self.w_i = w  # width of shank
-        self.t_i = t  # length between flat bottom and tip
+    def __init__(self, shank_dimentions, box_dimentions=None):
+        self.h_i = shank_dimentions[0]  # height of shank
+        self.w_i = shank_dimentions[1]  # width of shank
+        self.th_i = shank_dimentions[2] # thickness of shank
+        self.t_i = shank_dimentions[3]  # length between flat bottom and tip
 
-        self.h = h  # height of box
-        self.w = w  # width of box
-        self.t = t  # length between flat bottom and tip
-        if np.all([h, w, t]):
+        self.h = box_dimentions[0]  # height of box
+        self.w = box_dimentions[1]  # width of box
+        if np.all([h_i, w_i, t_i]):
             self.make_vertices()
 
     def reset_position(self):
