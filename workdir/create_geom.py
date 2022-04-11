@@ -6,26 +6,19 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 class Shank:
-    def __init__(self, shank_dimentions, box_dimentions=None):
-        self.h_i = shank_dimentions[0]  # height of shank
-        self.w_i = shank_dimentions[1]  # width of shank
-        self.th_i = shank_dimentions[2] # thickness of shank
-        self.t_i = shank_dimentions[3]  # length between flat bottom and tip
+    def __init__(self, shank_dimensions, box_dimensions=None, separation_dimensions=None):
+        self.h = shank_dimensions[0]  # height of shank
+        self.w = shank_dimensions[1]  # width of shank
+        self.t = shank_dimensions[2]  # length between flat bottom and tip
 
-        self.bh = box_dimentions[0][0]  # height of box
-        self.bw = box_dimentions[1][0]  # width of box
-        self.sh = box_dimentions[0][1] # vertical seperation between boxes
-        self.sw = box_dimentions[1][1] # horizontal sereration between boxes
-
-        if np.all([h_i, w_i, th_i t_i]):
+        if np.all(shank_dimensions):
             self.make_vertices()
 
-    def reset_position(self):
-        self.h = self.h_i
-        self.w = self.w_i
-        self.t = self.t_i
-        self.origin = np.array([0, 0, 0])
-        self.make_vertices()
+        if box_dimensions and separation_dimensions:
+            self.bh = box_dimensions[0]  # height of box
+            self.bw = box_dimensions[1]  # width of box
+            self.sh = separation_dimensions[0] # vertical separation between boxes
+            self.sw = separation_dimensions[1] # horizontal seraration between boxes
 
     def make_vertices(self):
         self.tl = np.array([-self.w/2, 0, self.h/2])  # top left
@@ -34,7 +27,7 @@ class Shank:
         self.tr = np.array([self.w/2, 0, self.h/2])  # top right
         self.tip = np.array([0, 0, self.t - self.h/2])  # tip
 
-        self.origin = np.array([0, 0, 0])
+        self.centroid = np.array([0, 0, 0])
         self.n = np.array([0, 1, 0])  # normal vector of the surface
 
     def rotate(self, seq='x', angles=90):
@@ -45,7 +38,7 @@ class Shank:
         self.tr = r.apply(self.tr)
         self.tip = r.apply(self.tip)
         self.n = r.apply(self.n)
-        self.origin = r.apply(self.origin)
+        self.centroid = r.apply(self.centroid)
 
     def translate(self, r):
         self.tl += r
@@ -53,20 +46,21 @@ class Shank:
         self.br += r
         self.tr += r
         self.tip += r
-        self.origin += r
+        self.centroid += r
 
-    def vertice_positions(self, precision):
+    def vertice_positions(self, precision=13):
         xs = np.round(
-            [self.tip[0], self.tl[0], self.bl[0], self.br[0], self.tr[0]], precision)
+            [self.br[0], self.tr[0], self.tl[0], self.bl[0], self.tip[0]], precision)
         ys = np.round(
-            [self.tip[1], self.tl[1], self.bl[1], self.br[1], self.tr[1]], precision)
+            [self.br[1], self.tr[1], self.tl[1], self.bl[1], self.tip[1]], precision)
         zs = np.round(
-            [self.tip[2], self.tl[2], self.bl[2], self.br[2], self.tr[2]], precision)
+            [self.br[2], self.tr[2], self.tl[2], self.bl[2], self.tip[2]], precision)
         return xs, ys, zs
 
-    def plot_plane(self, precision=13):
-        plt.figure('Shank', figsize=plt.figaspect(1)*1.5)
-        ax = plt.subplot(111, projection='3d')
+    def plot_plane(self, precision=13, ax=None, show=False):
+        if not ax:
+            plt.figure('Shank', figsize=plt.figaspect(1)*1.5)
+            ax = plt.subplot(111, projection='3d')
 
         xs, ys, zs = self.vertice_positions(precision=precision)
         ax.scatter(xs, ys, zs)
@@ -74,19 +68,20 @@ class Shank:
         # 1. create vertices from points
         verts = [list(zip(xs, ys, zs))]
         # 2. create 3d polygons and specify parameters
-        srf = Poly3DCollection(verts, alpha=.25, facecolor='#800000')
+        srf = Poly3DCollection(verts, alpha=.5, facecolor='gray')
+        srf.set_edgecolor('black')
         # 3. add polygon to the figure (current axes)
         plt.gca().add_collection3d(srf)
-        ax.quiver3D(*self.origin, *(self.n), color=['r'], length=200)
+        ax.quiver3D(*self.centroid, *(self.n), color=['r'], length=200)
         ax.set_adjustable("datalim")
 
-        lim = - self.t_i/2
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-        ax.set_xlim(-lim, lim)
-        ax.set_ylim(-lim, lim)
-        ax.set_zlim(-lim, lim)
+        delta = self.h / 2
+        ax.set_xlim(self.centroid[0] - delta, self.centroid[0] + delta)
+        ax.set_ylim(self.centroid[1] - delta, self.centroid[1] + delta)
+        ax.set_zlim(self.centroid[2] - delta, self.centroid[2] + delta)
         plt.show()
 
     def add_boxes(self, n_box, w, h, pos):
@@ -94,22 +89,22 @@ class Shank:
 
     def make_grid(self):
         # find the greatest number of pixels that can fit on the width of the shank
-        row_count = np.ceil((self.w_i + sw) / (self.w + sw)) - 1
+        row_count = np.ceil((self.w + self.sw) / (self.bw + self.sw)) - 1
         # find the margin for each side of the row
-        row_margin = (self.w_i - (row_count * self.w + (row_count - 1) * sw)) / 2
+        row_margin = (self.w - (row_count * self.bw + (row_count - 1) * self.sw)) / 2
 
         # find the greatest number of pixels that can fit on the length of the shank
-        column_count = np.ceil((self.h_i + sh) / (self.h + sh)) - 1
+        column_count = np.ceil((self.h + self.sh) / (self.bh + self.sh)) - 1
         # find the margin for each side of the column
-        column_margin = (self.h_i - (column_count * self.h + (column_count - 1) * sh)) / 2
+        column_margin = (self.h - (column_count * self.bh + (column_count - 1) * self.sh)) / 2
         
         # calculate the x positions for the rows of boxes
-        xs = np.arange(self.bl[0] + row_margin + self.w/2, self.w_i, self.w + sw)
+        xs = np.arange(self.bl[0] + row_margin + self.bw / 2, self.w, self.bw + self.sw)
         # calculate the z positions for the columns of boxes
-        zs = np.arange(self.bl[2] + column_margin + self.h/2, self.h_i, self.h + sh)
+        zs = np.arange(self.bl[2] + column_margin + self.bh / 2, self.h, self.bh + self.sh)
 
         # zip xs and zs
-        return [[x, th/2, z] for x in xs for z in zs]
+        return [[x, 0, z] for x in xs for z in zs]
 
 
 
@@ -132,7 +127,7 @@ class ShankGroup:
             srf = Poly3DCollection(verts, alpha=.25, facecolor='#800000')
             # 3. add polygon to the figure (current axes)
             plt.gca().add_collection3d(srf)
-            ax.quiver3D(*self.shank[i].origin, *(self.shank[i].n),
+            ax.quiver3D(*self.shank[i].centroid, *(self.shank[i].n),
                         color=['r'], length=200)
 
         lim = self.shank[0].t_i/2
