@@ -2,6 +2,7 @@ import datajoint as dj
 import numpy as np
 import scipy
 import tqdm
+from .sim import Fluorescence
 
 
 schema = dj.schema(dj.config['custom']['database.prefix'] + 'photonics')

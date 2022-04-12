@@ -1,22 +1,29 @@
-# docker-compose -f ./docker/docker-compose-dev.yaml up -d
-# docker-compose -f ./docker/docker-compose-dev.yaml up --build -d
-# docker-compose -f ./docker/docker-compose-dev.yaml down
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-dev.yaml up -d
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-dev.yaml up --build -d
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-dev.yaml down
 # Build this image from neurophotonics level on your local machine
 version: '2.4'
 services:
   standard_worker:
     build: # only necessary if rebuilding image
-      context: ../../
-      dockerfile: ./neurophotonics/docker/dev.Dockerfile
-    image: registry.vathes.com/sciops/neurophotonics:v0.0.0
+      context: ../
+      dockerfile: ./docker/dev.Dockerfile
+    image: registry.vathes.com/sciops/neurophotonics:v0.0.1
+    env_file: dev.env
     environment:
-      - USER
-      - DJ_HOST
-      - DJ_USER
-      - DJ_PASS
-      - DATABASE_PREFIX
+      - NEW_USER=datajoint
+      - DATABASE_PREFIX=neurophotonics_
+      - DISPLAY
+    user: ${HOST_UID}:anaconda
     volumes:
-      - ./neurophotonics:/home/${USER}/neurophotonics
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ../setup.py:/main/setup.py
+      - ../requirements.txt:/main/requirements.txt
+      - ../README.md:/main/README.md
+      - ../scripts:/main/scripts
+      - ../neurophotonics:/main/neurophotonics
+      - ../workdir:/main/workdir
+      - ../dj_local_conf.json:/main/dj_local_conf.json
     scale: ${WORKER_COUNT:-1}
     command:
       - /bin/bash

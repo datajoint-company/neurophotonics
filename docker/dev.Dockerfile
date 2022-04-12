@@ -1,11 +1,12 @@
-FROM datajoint/djbase:py3.9-debian-fcd8909
-
-WORKDIR $HOME
+FROM datajoint/djbase:py3.9-debian
 
 # Copy user's local fork of elements and workflow
-COPY ./neurophotonics $HOME/neurophotonics
+COPY ./setup.py ./requirements.txt ./README.md dj_local_conf.json ./
+COPY scripts ./scripts
+COPY ./neurophotonics ./neurophotonics
+COPY ./workdir ./workdir
 
 # Install the workflow
-RUN pip install -e $HOME/neurophotonics
-
-WORKDIR $HOME
+RUN \
+	mkdir /main/data_store && \
+	pip install -e .

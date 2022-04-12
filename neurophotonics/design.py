@@ -3,6 +3,7 @@ import pathlib
 import itertools
 import re
 import datajoint as dj
+from .fields import EField
 
 
 schema = dj.schema(dj.config['custom']['database.prefix'] + 'photonics')

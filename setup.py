@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), 'r') as f:
 with open(path.join(here, 'requirements.txt')) as f:
     requirements = f.read().splitlines()
 
-with open(path.join('photonics', 'version.py')) as f:
+with open(path.join('neurophotonics', 'version.py')) as f:
     exec(f.read())
 
 setup(

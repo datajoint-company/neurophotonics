@@ -1,0 +1,8 @@
+{
+	"stores": {
+		"photonics": {
+			"protocol": "file",
+			"location": "/main/data_store"
+		}
+	}
+}
