@@ -8,5 +8,6 @@ COPY ./workdir ./workdir
 
 # Install the workflow
 RUN \
+	umask u=rwx,g=rwx,o-rwx && \
 	mkdir /main/data_store && \
 	pip install -e .
