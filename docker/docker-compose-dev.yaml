@@ -29,4 +29,6 @@ services:
       - /bin/bash
       - -c
       - |
-        tail -f /dev/null
+        echo "Sucsess!"
+        #python3 scripts/pop_fields.py
+        #  tail -f /dev/null
