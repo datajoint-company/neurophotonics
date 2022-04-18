@@ -1,0 +1,17 @@
+name: Run EC2 instance
+
+on:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  run:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Install aws cli
+      run: apt install awscli
+    - name: List instances
+      run: aws ec2 describe-instances --filters Name=instance-type,Values=t3a.micro --query "Reservations[].Instances[].InstanceId"
