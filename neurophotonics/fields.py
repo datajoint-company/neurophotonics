@@ -137,14 +137,14 @@ class ESim(dj.Lookup):
     ]
 
 
-    ESim.insert([
-        dict(esim=51, esim_description="Narrowed to pi/4, steered -18/64*pi", beam_compression=1/4, y_steer=-18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1000/0.062),
-        dict(esim=52, esim_description="Narrowed to pi/4, steered -12/64*pi", beam_compression=1/4, y_steer=-12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=53, esim_description="Narrowed to pi/4, steered -6/64*pi",  beam_compression=1/4, y_steer=-6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=54, esim_description="Narrowed to pi/4, steered 0",         beam_compression=1/4, y_steer=0 * np.pi,      beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=55, esim_description="Narrowed to pi/4, steered +6/64*pi",  beam_compression=1/4, y_steer=+6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=56, esim_description="Narrowed to pi/4, steered +12/64*pi", beam_compression=1/4, y_steer=+12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=57, esim_description="Narrowed to pi/4, steered +18/64*pi", beam_compression=1/4, y_steer=+18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062)], skip_duplicates=True)
+ESim.insert([
+    dict(esim=51, esim_description="Narrowed to pi/4, steered -18/64*pi", beam_compression=1/4, y_steer=-18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1000/0.062),
+    dict(esim=52, esim_description="Narrowed to pi/4, steered -12/64*pi", beam_compression=1/4, y_steer=-12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=53, esim_description="Narrowed to pi/4, steered -6/64*pi",  beam_compression=1/4, y_steer=-6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=54, esim_description="Narrowed to pi/4, steered 0",         beam_compression=1/4, y_steer=0 * np.pi,      beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=55, esim_description="Narrowed to pi/4, steered +6/64*pi",  beam_compression=1/4, y_steer=+6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=56, esim_description="Narrowed to pi/4, steered +12/64*pi", beam_compression=1/4, y_steer=+12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=57, esim_description="Narrowed to pi/4, steered +18/64*pi", beam_compression=1/4, y_steer=+18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062)], skip_duplicates=True)
 
 
 @schema
