@@ -1,9 +1,10 @@
 import numpy as np
 import datajoint as dj
-from photonics.space import Space
+from .space import Space
 from matplotlib import pyplot as plt
 
-schema = dj.schema('photonics')
+
+schema = dj.schema(dj.config['custom']['database.prefix'] + 'photonics')
 
 
 @schema
@@ -11,29 +12,30 @@ class DSim(dj.Lookup):
     definition = """
     # Detector Field Specification
     dsim : int
-    --- 
-    dsim_description  : varchar(1024)  
-    detector_type='one-sided' : varchar(30)   # choice in simulation
-    detector_width=10.00: decimal(5,2)   # (um) along x-axis
-    detector_height=10.00:  decimal(5,2)  # (um) along y-axis
-    anisotropy = 0.88 : float  # factor in the Henyey-Greenstein formula
-    absorption_length = 14000 : float # (um)  average travel path before a absoprtion event 
-    scatter_length=100 : float # (um) average travel path before a scatter event
-    volume_dimx = 1000 : int unsigned # (voxels)
-    volume_dimy = 1000 : int unsigned # (voxels)
-    volume_dimz = 1000 : int unsigned # (voxels)
-    pitch = 2.2 : float  # (um)  spatial sampling period of the model volume
+    ---
+    dsim_description            : varchar(1024)
+    detector_type = 'one-sided' : varchar(30)  # choice in simulation
+    detector_width = 10.00      : decimal(5,2) # (um) along x-axis
+    detector_height = 10.00     : decimal(5,2) # (um) along y-axis
+    anisotropy = 0.88           : float        # factor in the Henyey-Greenstein formula
+    absorption_length = 14000   : float        # (um) average travel path before an absorption event
+    scatter_length = 100        : float        # (um) average travel path before a scatter event
+    volume_dimx = 1000          : int unsigned # (voxels)
+    volume_dimy = 1000          : int unsigned # (voxels)
+    volume_dimz = 1000          : int unsigned # (voxels)
+    pitch = 2.2                 : float        # (um)  spatial sampling period of the model volume
     """
 
     contents = [
-        dict(dsim=0, detector_type='one-sided', detector_height=50, scatter_length=100,     absorption_length=14000, dsim_description='100% Efficient Lambertian 10x50 rect'),
-        dict(dsim=1, detector_type='one-sided', detector_height=20, scatter_length=100,     absorption_length=14000, dsim_description='100% Efficient Lambertian 10x20 rect'),
-        dict(dsim=2, detector_type='narrowed',  detector_height=20, scatter_length=100,     absorption_length=14000, dsim_description="Narrow selective as 4th power of cosine, 10x20 rect"),
-        dict(dsim=3, detector_type='narrowed2', detector_height=20, scatter_length=100,     absorption_length=14000, dsim_description="Narrow selective as 2th power of cosine, 10x20 rect"),
-        dict(dsim=4, detector_type='narrowed8', detector_height=20, scatter_length=100,     absoprtion_length=14000,  dsim_description="Narrow selective as 8th power of cosine, 10x20 rect"),
+        dict(dsim=0, detector_type='one-sided', detector_height=50, scatter_length=100, absorption_length=14000, dsim_description='100% Efficient Lambertian 10x50 rect'),
+        dict(dsim=1, detector_type='one-sided', detector_height=20, scatter_length=100, absorption_length=14000, dsim_description='100% Efficient Lambertian 10x20 rect'),
+        dict(dsim=2, detector_type='narrowed',  detector_height=20, scatter_length=100, absorption_length=14000, dsim_description="Narrow selective as 4th power of cosine, 10x20 rect"),
+        dict(dsim=3, detector_type='narrowed2', detector_height=20, scatter_length=100, absorption_length=14000, dsim_description="Narrow selective as 2th power of cosine, 10x20 rect"),
+        dict(dsim=4, detector_type='narrowed8', detector_height=20, scatter_length=100, absorption_length=14000, dsim_description="Narrow selective as 8th power of cosine, 10x20 rect"),
 	]
+
+
 DSim.insert1(dict(dsim=5, detector_type='narrowed8', detector_height=20, scatter_length=1000/21, absorption_length=1000/0.062, dsim_description="Narrow selective as 8th power of cosine, 10x20 rect"), skip_duplicates=True)
-       
 
 
 @schema
@@ -42,8 +44,8 @@ class DField(dj.Computed):
     # Detector Field Reference Volume
     -> DSim
     ---
-    volume : blob@photonics   # probability of a photon emitted at given point getting picked up by the given detector
-    max_value : float   # should be < 1.0
+    volume        : blob@photonics # probability of a photon emitted at given point getting picked up by the given detector
+    max_value     : float          # should be < 1.0
     total_photons : int unsigned
     """
 
@@ -85,25 +87,24 @@ class ESim(dj.Lookup):
     definition = """
     # Emission Field Specification
     esim : int
-    --- 
-    esim_description : varchar(1024) 
-    beam_compression : float  
-    y_steer : float   # the steer angle in the plane of the shank
-    emitter_width=10.00: decimal(5,2)   # (um) along x-axis
-    emitter_height=10.00:  decimal(5,2)  # (um) along y-axis
-    anisotropy = 0.88 : float  # factor in the Henyey-Greenstein formula
-    absorption_length = 14000 : float # (um)  average travel path before a absoprtion event    
-    scatter_length=100 : float # (um) average travel path before a scatter event
-    volume_dimx = 1000 : int unsigned # (voxels)
-    volume_dimy = 1000 : int unsigned # (voxels)
-    volume_dimz = 1000 : int unsigned # (voxels)
-    beam_xy_aspect = 1.0 : float   # compression of y. E.g. 2.0 means that y is compressed by factor of 2
-    pitch = 2.2 : float  # (um)  spatial sampling period of the model volume
+    ---
+    esim_description          : varchar(1024)
+    beam_compression          : float
+    y_steer                   : float         # the steer angle in the plane of the shank
+    emitter_width = 10.00     : decimal(5,2)  # (um) along x-axis
+    emitter_height = 10.00    : decimal(5,2)  # (um) along y-axis
+    anisotropy = 0.88         : float         # factor in the Henyey-Greenstein formula
+    absorption_length = 14000 : float         # (um) average travel path before a absorption event
+    scatter_length = 100      : float         # (um) average travel path before a scatter event
+    volume_dimx = 1000        : int unsigned  # (voxels)
+    volume_dimy = 1000        : int unsigned  # (voxels)
+    volume_dimz = 1000        : int unsigned  # (voxels)
+    beam_xy_aspect = 1.0      : float         # compression of y. E.g. 2.0 means that y is compressed by factor of 2
+    pitch = 2.2               : float         # (um) spatial sampling period of the model volume
     """
 
     contents = [
         dict(esim=0, esim_description="Lambertian 10 x 10", beam_compression=1.0, y_steer=0.0, beam_xy_aspect=1.0),
-
         dict(esim=10, esim_description="Narrowed to pi/4, steered -24/64*pi", beam_compression=1/4, y_steer=-24/64 * np.pi, beam_xy_aspect=1.0),
         dict(esim=11, esim_description="Narrowed to pi/4, steered -18/64*pi", beam_compression=1/4, y_steer=-18/64 * np.pi, beam_xy_aspect=1.0),
         dict(esim=12, esim_description="Narrowed to pi/4, steered -12/64*pi", beam_compression=1/4, y_steer=-12/64 * np.pi, beam_xy_aspect=1.0),
@@ -133,17 +134,17 @@ class ESim(dj.Lookup):
         dict(esim=36, esim_description="Narrowed to pi/3, steered +pi/6", beam_compression=1/4, y_steer=+np.pi / 6, beam_xy_aspect=2.0),
         dict(esim=37, esim_description="Narrowed to pi/3, steered +pi/4", beam_compression=1/4, y_steer=+np.pi / 4, beam_xy_aspect=2.0),
         dict(esim=38, esim_description="Narrowed to pi/3, steered +pi/3", beam_compression=1/4, y_steer=+np.pi / 3, beam_xy_aspect=2.0),
-	]
+    ]
 
-	
+
 ESim.insert([
-        dict(esim=51, esim_description="Narrowed to pi/4, steered -18/64*pi", beam_compression=1/4, y_steer=-18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1000/0.062),
-        dict(esim=52, esim_description="Narrowed to pi/4, steered -12/64*pi", beam_compression=1/4, y_steer=-12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=53, esim_description="Narrowed to pi/4, steered -6/64*pi",  beam_compression=1/4, y_steer=-6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=54, esim_description="Narrowed to pi/4, steered 0",         beam_compression=1/4, y_steer=0 * np.pi,      beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=55, esim_description="Narrowed to pi/4, steered +6/64*pi",  beam_compression=1/4, y_steer=+6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=56, esim_description="Narrowed to pi/4, steered +12/64*pi", beam_compression=1/4, y_steer=+12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
-        dict(esim=57, esim_description="Narrowed to pi/4, steered +18/64*pi", beam_compression=1/4, y_steer=+18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062)], skip_duplicates=True)
+    dict(esim=51, esim_description="Narrowed to pi/4, steered -18/64*pi", beam_compression=1/4, y_steer=-18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1000/0.062),
+    dict(esim=52, esim_description="Narrowed to pi/4, steered -12/64*pi", beam_compression=1/4, y_steer=-12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=53, esim_description="Narrowed to pi/4, steered -6/64*pi",  beam_compression=1/4, y_steer=-6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=54, esim_description="Narrowed to pi/4, steered 0",         beam_compression=1/4, y_steer=0 * np.pi,      beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=55, esim_description="Narrowed to pi/4, steered +6/64*pi",  beam_compression=1/4, y_steer=+6/64 * np.pi,  beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=56, esim_description="Narrowed to pi/4, steered +12/64*pi", beam_compression=1/4, y_steer=+12/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062),
+    dict(esim=57, esim_description="Narrowed to pi/4, steered +18/64*pi", beam_compression=1/4, y_steer=+18/64 * np.pi, beam_xy_aspect=1.0, scatter_length=1000/21,  absorption_length=1/0.062)], skip_duplicates=True)
 
 
 @schema
@@ -152,7 +153,7 @@ class EField(dj.Computed):
     # Emitter Field Reference Volume
     -> ESim
     ---
-    volume : blob@photonics   # probability of a photon emitted at given point getting picked up by the given detector
+    volume        : blob@photonics # probability of a photon emitted at given point getting picked up by the given detector
     total_photons : int unsigned
     """
 
