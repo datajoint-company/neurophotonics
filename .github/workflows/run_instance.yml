@@ -10,11 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: amazon/aws-cli
-    
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_DEFAULT_REGION: ${{ AWS_DEFAULT_REGION }}
-      AWS_SECRET_ACCESS_KEY: ${{ AWS_SECRET_ACCESS_KEY }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_DEFAULT_REGION: ${{ AWS_DEFAULT_REGION }}
+        AWS_SECRET_ACCESS_KEY: ${{ AWS_SECRET_ACCESS_KEY }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
