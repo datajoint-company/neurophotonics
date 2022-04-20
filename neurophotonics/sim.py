@@ -2,8 +2,10 @@ import numpy as np
 from scipy.spatial import distance
 import datajoint as dj
 import tqdm
+from .design import Geometry
 
-schema = dj.schema('photonics')
+
+schema = dj.schema(dj.config['custom']['database.prefix'] + 'photonics')
 schema.spawn_missing_classes()
 
 
@@ -13,13 +15,13 @@ class Tissue(dj.Computed):
     # Point sources of fluorescence
     -> Geometry
     ---
-    volume : float #  (mm^3)
-    margin : float # (um) margin to include on boundaries
-    npoints : int    # total number of points in volume
-    min_distance : float  # (um)
-    cell_xyz  : longblob  # cell 
+    volume       : float     #  (mm^3)
+    margin       : float     # (um) margin to include on boundaries
+    npoints      : int       # total number of points in volume
+    min_distance : float     # (um)
+    cell_xyz     : longblob  # cell
     """
-        
+
     def make(self, key):
         density = 120000
         xyz = np.vstack((
@@ -31,15 +33,15 @@ class Tissue(dj.Computed):
                     'e_center_x', 'e_center_y', 'e_center_z'))))))
         margin = 50
         bounds_min = xyz.min(axis=0) - margin
-        bounds_max = xyz.max(axis=0) + margin 
-        
+        bounds_max = xyz.max(axis=0) + margin
+
         volume = (bounds_max - bounds_min).prod()*1e-9
         npoints = int(volume * density + 0.5)
-        
-        min_distance = 8.0  
-        
+
+        min_distance = 8.0
+
         points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-        for i in tqdm.tqdm(range(npoints-1)):
+        for i in tqdm.tqdm(range(npoints - 1)):
             while True:
                 point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
                 if distance.cdist(points, point).min() > min_distance:
@@ -47,7 +49,7 @@ class Tissue(dj.Computed):
             points = np.vstack((points, point))
 
         self.insert1(dict(
-            key, volume=volume, margin=margin, 
+            key, volume=volume, margin=margin,
             npoints=npoints, min_distance=min_distance, cell_xyz=points))
 
 
@@ -56,7 +58,7 @@ class Fluorescence(dj.Computed):
     definition = """
     -> Tissue
     """
-    
+
     class Emitter(dj.Part):
         definition = """
         # Fluorescence produced by cells per Joule of illumination
@@ -69,7 +71,7 @@ class Fluorescence(dj.Computed):
         
     def make(self, key):
         neuron_cross_section = 1e-4  # um^2
-        photons_per_joule = 1/(2.8*1.6e-19)   # 2.8 eV blue photons 
+        photons_per_joule = 1 / (2.8 * 1.6e-19)  # 2.8 eV blue photons 
         cell_xyz = (Tissue & key).fetch1('cell_xyz')
         self.insert1(key)
         for esim_key in (ESim & (Geometry.Emitter & key)).fetch('KEY'):
@@ -95,9 +97,9 @@ class Fluorescence(dj.Computed):
 
                 # photon counts
                 v = neuron_cross_section * photons_per_joule * np.array([
-                    volume[q[0], q[1], q[2]] if 
-                    0 <= q[0] < dims[0] and 
-                    0 <= q[1] < dims[1] and 
+                    volume[q[0], q[1], q[2]] if
+                    0 <= q[0] < dims[0] and
+                    0 <= q[1] < dims[1] and
                     0 <= q[2] < dims[2] else 0 for q in vxyz])
                 self.Emitter().insert1(
                     dict(key, **emit_key,
@@ -110,7 +112,7 @@ class Detection(dj.Computed):
     definition = """
     -> Tissue
     """
-    
+
     class Detector(dj.Part):
         definition = """
         # Fraction of photons detected from each cell per detector
@@ -125,8 +127,8 @@ class Detection(dj.Computed):
         cell_xyz = (Tissue & key).fetch1('cell_xyz')
         self.insert1(key)
         for dsim_key in (DSim & (Geometry.Detector & key)).fetch('KEY'):
-            volume, pitch, *dims  = (DField * DSim & dsim_key).fetch1('volume', 'pitch', 'volume_dimx', 'volume_dimy', 'volume_dimz')
-            volume = 0.5 * volume / volume.max()  #  just in case. Max detection should already be ~0.5. Update after additional sim verifications
+            volume, pitch, *dims = (DField * DSim & dsim_key).fetch1('volume', 'pitch', 'volume_dimx', 'volume_dimy', 'volume_dimz')
+            volume = 0.5 * volume / volume.max()  # just in case. Max detection should already be ~0.5. Update after additional sim verifications
             dims = np.array(dims)
             for detect_key in tqdm.tqdm((Geometry.Detector & key & dsim_key).fetch('KEY')):
                 # cell positions in volume coordinates
@@ -145,11 +147,11 @@ class Detection(dj.Computed):
                     (cell_xyz - d_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch + dims/2))
                 # photon counts
                 v = np.array([
-                    volume[q[0], q[1], q[2]] if 
-                    0 <= q[0] < dims[0] and 
-                    0 <= q[1] < dims[1] and 
+                    volume[q[0], q[1], q[2]] if
+                    0 <= q[0] < dims[0] and
+                    0 <= q[1] < dims[1] and
                     0 <= q[2] < dims[2] else 0 for q in vxyz])
                 self.Detector().insert1(
                     dict(key, **detect_key,
-                         detect_probabilities = np.float32(v),
-                         mean_probability = v.sum()))
+                         detect_probabilities=np.float32(v),
+                         mean_probability=v.sum()))
