@@ -17,5 +17,5 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - name: List T3As
-      run: aws ec2 describe-instances --filters Name=instance-type,Values=t3a.micro --query "Reservations[].Instances[].InstanceId"
+    - name: Launch instance
+      run: aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
