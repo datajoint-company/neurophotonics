@@ -6,7 +6,7 @@ import numpy as np
 def ingest_ESimDSim():
     DSim.insert1(
         dict(
-            dsim=1,
+            dsim=0,
             detector_type="one-sided",
             detector_height=5.00,
             detector_width=5.00,
@@ -17,14 +17,14 @@ def ingest_ESimDSim():
             volume_dimy=1000,
             volume_dimz=1000,
             pitch=2.2,
-            dsim_description="100% Efficient Lambertian 10x20 rect",
+            dsim_description="100% Efficient Lambertian 5x5 rect",
         ),
         skip_duplicates=True,
     )
 
     ESim.insert1(
         dict(
-            esim=14,
+            esim=0,
             esim_description="Narrowed to pi/4, steered 0",
             beam_compression=1 / 4,
             y_steer=0 * np.pi,
@@ -51,8 +51,8 @@ def ingest_design():
             design_path="./",
             geometry_file="Design1.csv",
             center_offset=(0, 0, 0),
-            efields=14,
-            dfields=1,
+            efields=0,
+            dfields=0,
         ),
         skip_duplicates=True,
     )

@@ -54,10 +54,10 @@ def design1(save=False, output="Design1.csv"):
 
     PG = ProbeGroup([P1, P2, P3])
 
-    PG.probes[0].translate([-200, 0, 0])
+    PG.probes[0].translate([-120, 0, 0])
     PG.probes[0].rotate_around(["br", "tr"], -45)
 
-    PG.probes[2].translate([200, 0, 0])
+    PG.probes[2].translate([120, 0, 0])
     PG.probes[2].rotate_around(["bl", "tl"], 45)
 
     if save:
