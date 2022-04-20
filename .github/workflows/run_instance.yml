@@ -8,10 +8,15 @@ jobs:
   run:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    container:
+      image: amazon/aws-cli
+    
+    env:
+      AWS_ACCESS_KEY_ID: ${secrets.AWS_ACCESS_KEY_ID}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - name: Install aws cli
-      run: sudo apt install awscli
-    - name: List instances
-      run: aws ec2 describe-instances --filters Name=instance-type,Values=t3a.micro --query "Reservations[].Instances[].InstanceId"
+    - name: List T3As
+      run: ec2 describe-instances --filters Name=instance-type,Values=t3a.micro --query "Reservations[].Instances[].InstanceId"
