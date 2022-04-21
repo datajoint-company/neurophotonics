@@ -28,4 +28,5 @@ jobs:
     - name: sanity check
       run: sha256sum key.pem
     - name: start remote script
-      run: ssh -i key.pem ubuntu@54.156.71.235 'screen -d -m sh startup.sh'
+      run: ssh ubuntu@54.156.71.235 sudo poweroff
+      #run: ssh -i key.pem ubuntu@54.156.71.235 'screen -d -m sh startup.sh'
