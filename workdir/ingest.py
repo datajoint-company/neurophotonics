@@ -46,14 +46,13 @@ def ingest_design():
     Design.insert1(
         dict(
             design=1,
-            design_title="Design1",
+            design_title="Design2",
             design_description="1 detector, 2-emitters, 153 unit apart, 45 degrees",
             design_path="./",
-            geometry_file="Design1.csv",
+            geometry_file="Design2.csv",
             center_offset=(0, 0, 0),
             efields=0,
             dfields=0,
         ),
         skip_duplicates=True,
     )
-
