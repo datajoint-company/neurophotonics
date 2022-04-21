@@ -24,7 +24,7 @@ class Tissue(dj.Computed):
     def make(self, key):
         density = 120000
 
-        xyz = np.vstack(
+        xyz = np.hstack(
             [
                 (Geometry.Emitter & key).fetch("e_center_x", "e_center_y", "e_center_z"),
                 (Geometry.Detector & key).fetch("d_center_x", "d_center_y", "d_center_z"),
