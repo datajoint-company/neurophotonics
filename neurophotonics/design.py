@@ -1,6 +1,6 @@
 import pandas as pd
 import datajoint as dj
-
+from .fields import EField, DField
 
 schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
 

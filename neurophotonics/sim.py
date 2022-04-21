@@ -2,6 +2,7 @@ import tqdm
 import numpy as np
 import datajoint as dj
 from .design import Geometry
+from .fields import ESim, DSim, EField, DField
 from scipy.spatial import distance
 
 schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
