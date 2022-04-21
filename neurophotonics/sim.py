@@ -1,9 +1,8 @@
-import numpy as np
-from scipy.spatial import distance
-import datajoint as dj
 import tqdm
+import numpy as np
+import datajoint as dj
 from .design import Geometry
-
+from scipy.spatial import distance
 
 schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
 schema.spawn_missing_classes()
@@ -15,7 +14,7 @@ class Tissue(dj.Computed):
     # Point sources of fluorescence
     -> Geometry
     ---
-    volume       : float     #  (mm^3)
+    volume       : float     # (mm^3)
     margin       : float     # (um) margin to include on boundaries
     npoints      : int       # total number of points in volume
     min_distance : float     # (um)
@@ -25,35 +24,13 @@ class Tissue(dj.Computed):
     def make(self, key):
         density = 120000
 
-        xyz = np.hstack(
+        xyz = np.vstack(
             [
                 (Geometry.Emitter & key).fetch("e_center_x", "e_center_y", "e_center_z"),
                 (Geometry.Detector & key).fetch("d_center_x", "d_center_y", "d_center_z"),
             ]
         )
 
-        xyz = np.vstack(
-            (
-                np.array(
-                    list(
-                        zip(
-                            *(Geometry.Detector & key).fetch(
-                                "d_center_x", "d_center_y", "d_center_z"
-                            )
-                        )
-                    )
-                ),
-                np.array(
-                    list(
-                        zip(
-                            *(Geometry.Emitter & key).fetch(
-                                "e_center_x", "e_center_y", "e_center_z"
-                            )
-                        )
-                    )
-                ),
-            )
-        )
         margin = 50
         bounds_min = xyz.min(axis=-1) - margin
         bounds_max = xyz.max(axis=-1) + margin
