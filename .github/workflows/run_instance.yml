@@ -27,5 +27,7 @@ jobs:
       run: echo -n ${{ secrets.ENCODED_KEY }} | base64 -d > Neurophotonics.pem
     - name: set key permissions
       run: chmod 600 Neurophotonics.pem
+    - name: Wait for instance to start # potential spot for improvement
+      run: sleep 10
     - name: start remote script
       run: ssh -o StrictHostKeyChecking=no -i Neurophotonics.pem ${{ secrets.REMOTE_ADDRESS }} 'screen -d -m sh startup.sh'
