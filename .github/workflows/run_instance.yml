@@ -32,5 +32,5 @@ jobs:
     - name: sanity check - files and permissions
       run: ls -la
     - name: start remote script
-      run: ssh -i Neurophotonics.pem ubuntu@54.156.71.235 sudo poweroff
-      #run: ssh -i Neurophotonics.pem ubuntu@54.156.71.235 'screen -d -m sh startup.sh'
+      run: ssh -o StrictHostKeyChecking=no -i Neurophotonics.pem ${{ secrets.REMOTE_ADDRESS }} sudo poweroff
+      #run: ssh -i Neurophotonics.pem secrets.REMOTE_ADDRESS 'screen -d -m sh startup.sh'
