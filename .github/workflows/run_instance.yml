@@ -25,11 +25,7 @@ jobs:
     steps:
     - name: add ssh key
       run: echo -n ${{ secrets.ENCODED_KEY }} | base64 -d > Neurophotonics.pem
-    - name: sanity check - key
-      run: sha256sum Neurophotonics.pem
     - name: set key permissions
       run: chmod 600 Neurophotonics.pem
-    - name: sanity check - files and permissions
-      run: ls -la
     - name: start remote script
       run: ssh -o StrictHostKeyChecking=no -i Neurophotonics.pem ${{ secrets.REMOTE_ADDRESS }} 'screen -d -m sh startup.sh'
