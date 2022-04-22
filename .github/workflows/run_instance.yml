@@ -24,7 +24,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - name: add ssh key
-      run: echo ${{ secrets.ENCODED_KEY }} | base64 -d > Neurophotonics.pem
+      run: echo -n ${{ secrets.ENCODED_KEY }} | base64 -d > Neurophotonics.pem
     - name: sanity check - key
       run: sha256sum Neurophotonics.pem
     - name: set key permissions
