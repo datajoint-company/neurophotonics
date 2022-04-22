@@ -24,13 +24,13 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     - name: add ssh key
-      run: echo ${{ secrets.ENCODED_KEY }} | base64 -d > key.pem
+      run: echo ${{ secrets.ENCODED_KEY }} | base64 -d > Neurophotonics.pem
     - name: sanity check - key
-      run: sha256sum key.pem
+      run: sha256sum Neurophotonics.pem
     - name: set key permissions
-      run: chmod 600 key.pem
+      run: chmod 600 Neurophotonics.pem
     - name: sanity check - files and permissions
       run: ls -la
     - name: start remote script
-      run: ssh -i key.pem ubuntu@54.156.71.235 sudo poweroff
-      #run: ssh -i key.pem ubuntu@54.156.71.235 'screen -d -m sh startup.sh'
+      run: ssh -i Neurophotonics.pem ubuntu@54.156.71.235 sudo poweroff
+      #run: ssh -i Neurophotonics.pem ubuntu@54.156.71.235 'screen -d -m sh startup.sh'
