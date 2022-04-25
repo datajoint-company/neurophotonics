@@ -9,7 +9,8 @@ dj.config["custom"]["database.prefix"] = os.getenv(
     "DATABASE_PREFIX", dj.config["custom"].get("database.prefix", "")
 )
 
-db_prefix = dj.congif["custom"]["database.prefix"]
+db_prefix = dj.config["custom"]["database.prefix"]
+
 dj.config["stores"] = {
     "neurophotonics": dict(
         protocol="s3",
