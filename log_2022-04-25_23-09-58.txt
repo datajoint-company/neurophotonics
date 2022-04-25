@@ -1,0 +1,17 @@
+Connecting datajoint-worker@rds.datajoint.io:3306
+Traceback (most recent call last):
+  File "/main/scripts/pop_fields.py", line 1, in <module>
+    from neurophotonics.fields import *
+  File "/main/neurophotonics/__init__.py", line 26, in <module>
+    from . import space, fields, design, sim, demix
+  File "/main/neurophotonics/fields.py", line 7, in <module>
+    schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 77, in __init__
+    self.activate(schema_name)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 141, in activate
+    raise DataJointError(
+datajoint.errors.DataJointError: Schema `neurophotonics_photonics` does not exist and could not be created. Check permissions.
+['podman', '--version', '']
+using podman version: 3.4.2
+podman logs docker_standard_worker_1
+exit code: 0
