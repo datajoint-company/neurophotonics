@@ -1,0 +1,27 @@
+Connecting datajoint-worker@rds.datajoint.io:3306
+Traceback (most recent call last):
+  File "/main/scripts/pop_fields.py", line 1, in <module>
+    from neurophotonics.fields import *
+  File "/main/neurophotonics/__init__.py", line 26, in <module>
+    from . import space, fields, design, sim, demix
+  File "/main/neurophotonics/fields.py", line 33, in <module>
+    class DField(dj.Computed):
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 174, in __call__
+    self._decorate_master(cls, context)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 184, in _decorate_master
+    self._decorate_table(
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 224, in _decorate_table
+    instance.declare(context)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/table.py", line 98, in declare
+    self.connection.schemas[self.database].external[store]
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/external.py", line 477, in __getitem__
+    self._tables[store] = ExternalTable(
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/external.py", line 39, in __init__
+    self.spec = config.get_store_spec(store)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/settings.py", line 137, in get_store_spec
+    raise DataJointError(
+datajoint.errors.DataJointError: Storage photonics is requested but not configured
+['podman', '--version', '']
+using podman version: 3.4.2
+podman logs docker_standard_worker_1
+exit code: 0
