@@ -12,7 +12,7 @@ dj.config["custom"]["database.prefix"] = os.getenv(
 db_prefix = dj.config["custom"]["database.prefix"]
 
 dj.config["stores"] = {
-    "neurophotonics": dict(
+    "photonics": dict(
         protocol="s3",
         endpoint="s3.amazonaws.com:9000",
         bucket="dj-sciops",
