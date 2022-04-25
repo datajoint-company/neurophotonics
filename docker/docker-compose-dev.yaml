@@ -12,7 +12,7 @@ services:
     env_file: dev.env
     environment:
       - NEW_USER=datajoint
-      - DATABASE_PREFIX=neurophotonics_
+      - DATABASE_PREFIX
       - DISPLAY
     user: ${HOST_UID}:anaconda
     volumes:
