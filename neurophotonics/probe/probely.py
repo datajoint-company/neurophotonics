@@ -68,7 +68,13 @@ class Square:
         return xs, ys, zs
 
     def plot_squares2d(
-        self, fill="tonexty", fill_color="turquoise", mode="lines", line=dict(color="black"), fig=None, rotate=False
+        self,
+        fill="toself",
+        fill_color="#64fbbd",
+        mode="lines",
+        line=dict(color="gray"),
+        fig=None,
+        rotate=False,
     ):
         if not fig:
             fig = go.Figure()
@@ -76,8 +82,6 @@ class Square:
         xs, _, zs = self.vertices_positions()
         if rotate:
             xs, zs = zs, xs
-        xs = np.append(xs, xs[0])
-        zs = np.append(zs, zs[0])
 
         fig.add_traces(
             go.Scatter(
@@ -171,20 +175,32 @@ class Probe:
 
         if n_e_box[0]:
             n_e_box[0] = int(
-                np.floor((self.width - 2 * e_box_horizontal_margin + e_box_sep) / (e_box_length + e_box_sep))
+                np.floor(
+                    (self.width - 2 * e_box_horizontal_margin + e_box_sep)
+                    / (e_box_length + e_box_sep)
+                )
             )
         if n_e_box[1]:
             n_e_box[1] = int(
-                np.floor((self.height - 2 * e_box_vertical_margin + e_box_sep) / (e_box_length + e_box_sep))
+                np.floor(
+                    (self.height - 2 * e_box_vertical_margin + e_box_sep)
+                    / (e_box_length + e_box_sep)
+                )
             )
 
         if n_d_box[0]:
             n_d_box[0] = int(
-                np.floor((self.width - 2 * d_box_horizontal_margin + d_box_sep) / (d_box_length + d_box_sep))
+                np.floor(
+                    (self.width - 2 * d_box_horizontal_margin + d_box_sep)
+                    / (d_box_length + d_box_sep)
+                )
             )
         if n_d_box[1]:
             n_d_box[1] = int(
-                np.floor((self.height - 2 * d_box_vertical_margin + d_box_sep) / (d_box_length + d_box_sep))
+                np.floor(
+                    (self.height - 2 * d_box_vertical_margin + d_box_sep)
+                    / (d_box_length + d_box_sep)
+                )
             )
 
         if n_e_box:
@@ -264,37 +280,44 @@ class Probe:
         zs = np.round([self.br[2], self.tr[2], self.tl[2], self.bl[2], self.tip[2]], precision)
         return xs, ys, zs
 
-    @timer
     def e_centroids(self):
         # Initial positions of the E-pixels
         xs = np.array(
             [
-                self.e_box_horizontal_margin + self.e_box_length / 2 + i * (self.e_box_length + self.e_box_sep)
+                self.e_box_horizontal_margin
+                + self.e_box_length / 2
+                + i * (self.e_box_length + self.e_box_sep)
                 for i in range(self.n_e_box[0])
             ]
         )
         xs -= xs.mean()
+
         zs = np.array(
             [
-                self.e_box_vertical_margin + self.e_box_length / 2 + i * (self.e_box_length + self.e_box_sep)
+                self.e_box_vertical_margin
+                + self.e_box_length / 2
+                + i * (self.e_box_length + self.e_box_sep)
                 for i in range(self.n_e_box[1])
             ]
         )
         zs -= zs.mean()
         return [[x, 0, z] for x in xs for z in zs]
 
-    @timer
     def d_centroids(self):
         xs = np.array(
             [
-                self.d_box_horizontal_margin + self.d_box_length / 2 + i * (self.d_box_length + self.d_box_sep)
+                self.d_box_horizontal_margin
+                + self.d_box_length / 2
+                + i * (self.d_box_length + self.d_box_sep)
                 for i in range(self.n_d_box[0])
             ]
         )
         xs -= xs.mean()
         zs = np.array(
             [
-                self.d_box_vertical_margin + self.d_box_length / 2 + i * (self.d_box_length + self.d_box_sep)
+                self.d_box_vertical_margin
+                + self.d_box_length / 2
+                + i * (self.d_box_length + self.d_box_sep)
                 for i in range(self.n_d_box[1])
             ]
         )
@@ -307,7 +330,9 @@ class Probe:
         x_overlaps = [x for x in xs for ex in e_xs if (abs(x - ex) <= self.e_box_length / 2)]
         z_overlaps = [z for z in zs for ez in e_zs if (abs(z - ez) <= self.e_box_length / 2)]
         return [
-            candidate for candidate in candidates if not ((candidate[0] in x_overlaps) and (candidate[2] in z_overlaps))
+            candidate
+            for candidate in candidates
+            if not ((candidate[0] in x_overlaps) and (candidate[2] in z_overlaps))
         ]
 
     def init_e_boxes(self):
@@ -331,13 +356,26 @@ class Probe:
         xs = np.append(xs, xs[0])
         zs = np.append(zs, zs[0])
 
-        fig.add_traces(go.Scatter(x=xs, y=zs, fill="tonexty", mode="lines", line=dict(color="black"), fillcolor="gray"))
+        fig.add_traces(
+            go.Scatter(
+                x=xs,
+                y=zs,
+                fill="tonexty",
+                mode="lines",
+                line=dict(color="black"),
+                fillcolor="#bfbfbf",
+            )
+        )
 
         # E-pixels
         if e_pixels:
             [
                 e_p.plot_squares2d(
-                    fig=fig, fill_color="turquoise", mode="lines", line=dict(color="black"), rotate=rotate
+                    fig=fig,
+                    fill_color="#00c1df",
+                    mode="lines",
+                    line=dict(color="#759196"),
+                    rotate=rotate,
                 )
                 for e_p in self.e_pixels
             ]
@@ -345,7 +383,13 @@ class Probe:
         # D-pixels
         if d_pixels:
             [
-                d_p.plot_squares2d(fig=fig, fill_color="green", mode="lines", line=dict(color="black"), rotate=rotate)
+                d_p.plot_squares2d(
+                    fig=fig,
+                    fill_color="#64fbbd",
+                    mode="lines",
+                    line=dict(color="#759196"),
+                    rotate=rotate,
+                )
                 for d_p in self.d_pixels
             ]
 
@@ -353,7 +397,6 @@ class Probe:
         if show:
             fig.show()
 
-    # @timer
     def plot_probe3d(
         self,
         fig=None,
@@ -419,11 +462,17 @@ class Probe:
 
         # E-pixels
         if e_pixels:
-            [e_pixel.plot_squares3d(fig=fig, surfacecolor=e_pixel_surfacecolor) for e_pixel in self.e_pixels]
+            [
+                e_pixel.plot_squares3d(fig=fig, surfacecolor=e_pixel_surfacecolor)
+                for e_pixel in self.e_pixels
+            ]
 
         # D-pixels
         if d_pixels:
-            [d_pixel.plot_squares3d(fig=fig, surfacecolor=d_pixel_surfacecolor) for d_pixel in self.d_pixels]
+            [
+                d_pixel.plot_squares3d(fig=fig, surfacecolor=d_pixel_surfacecolor)
+                for d_pixel in self.d_pixels
+            ]
 
         delta = self.height / 2 + 200
         fig.update_layout(
@@ -476,7 +525,9 @@ class ProbeGroup:
                 )
             )
         else:
-            big_list = [probe.width for probe in self.probes] + [probe.height for probe in self.probes]
+            big_list = [probe.width for probe in self.probes] + [
+                probe.height for probe in self.probes
+            ]
             delta = np.max(big_list)
             centroid = np.asarray([probe.centroid for probe in self.probes]).mean(0)
             fig.update_layout(
@@ -495,12 +546,12 @@ class ProbeGroup:
         df["BoxType"] = ["Emitter" for probe in self.probes for e_pixel in probe.e_pixels] + [
             "Detector" for probe in self.probes for d_pixel in probe.d_pixels
         ]
-        df["center"] = [tuple(e_pixel.centroid) for probe in self.probes for e_pixel in probe.e_pixels] + [
-            tuple(d_pixel.centroid) for probe in self.probes for d_pixel in probe.d_pixels
-        ]
-        df["normal"] = [tuple(e_pixel.n) for probe in self.probes for e_pixel in probe.e_pixels] + [
-            tuple(d_pixel.n) for probe in self.probes for d_pixel in probe.d_pixels
-        ]
+        df["center"] = [
+            tuple(e_pixel.centroid) for probe in self.probes for e_pixel in probe.e_pixels
+        ] + [tuple(d_pixel.centroid) for probe in self.probes for d_pixel in probe.d_pixels]
+        df["normal"] = [
+            tuple(e_pixel.n) for probe in self.probes for e_pixel in probe.e_pixels
+        ] + [tuple(d_pixel.n) for probe in self.probes for d_pixel in probe.d_pixels]
         df["h"] = [e_pixel.height for probe in self.probes for e_pixel in probe.e_pixels] + [
             d_pixel.height for probe in self.probes for d_pixel in probe.d_pixels
         ]
