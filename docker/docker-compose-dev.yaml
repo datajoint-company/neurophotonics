@@ -25,7 +25,6 @@ services:
       - ../neurophotonics:/main/neurophotonics
       - ../workdir:/main/workdir
       - ../dj_local_conf.json:/main/dj_local_conf.json
-      - /tmp/autopopulate.py:/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py
     scale: ${WORKER_COUNT:-1}
     command:
       - /bin/bash
