@@ -14,7 +14,7 @@ db_prefix = dj.config["custom"]["database.prefix"]
 dj.config["stores"] = {
     "photonics": dict(
         protocol="s3",
-        endpoint="s3.amazonaws.com:9000",
+        endpoint="s3.amazonaws.com:443",
         bucket="dj-sciops",
         location=f"{db_prefix[:-1]}/datajoint/blob",
         access_key=os.getenv("AWS_ACCESS_KEY", None),
