@@ -45,14 +45,27 @@ def ingest_ESimDSim():
 def ingest_design():
     Design.insert1(
         dict(
-            design=1,
-            design_title="Design2",
-            design_description="1 detector, 2-emitters, 153 unit apart, 45 degrees",
+            design=0,
+            design_title="Year 1 Milestone Design",
+            design_description="3-probe configuration: 30 um separation and 75 degree rotation.",
             design_path="./",
-            geometry_file="Design2.csv",
+            geometry_file="Design1.csv",
             center_offset=(0, 0, 0),
             efields=0,
             dfields=0,
         ),
         skip_duplicates=True,
+    )
+
+    Design.insert1(
+        dict(
+            design=1,
+            design_title="Year 2",
+            design_description="10-probe configuration.",
+            design_path="./",
+            geometry_file="Design2.csv",
+            center_offset=(0, 0, 0),
+            efields=0,
+            dfields=0,
+        )
     )
