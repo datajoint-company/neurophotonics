@@ -25,12 +25,15 @@ services:
       - ../neurophotonics:/main/neurophotonics
       - ../workdir:/main/workdir
       - ../dj_local_conf.json:/main/dj_local_conf.json
+      - /tmp/autopopulate.py:/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py
     scale: ${WORKER_COUNT:-1}
     command:
       - /bin/bash
       - -c
       - |
-        python3 scripts/pop_fields.py &&
-        python3 scripts/pop_geo.py &&
-        python3 scripts/pop_sim.py &&
+        set -e
+        python3 workdir/ingest.py
+        python3 scripts/pop_fields.py
+        python3 scripts/pop_geo.py
+        python3 scripts/pop_sim.py
         python3 scripts/pop_demix.py

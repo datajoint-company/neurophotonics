@@ -67,5 +67,10 @@ def ingest_design():
             center_offset=(0, 0, 0),
             efields=0,
             dfields=0,
-        )
+        ),
+        skip_duplicates=True,
     )
+
+if __name__ == '__main__':
+    ingest_ESimDSim()
+    ingest_design()
