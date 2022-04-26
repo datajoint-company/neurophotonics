@@ -1,0 +1,29 @@
+Connecting datajoint-worker@rds.datajoint.io:3306
+DField already populated
+Connecting datajoint-worker@rds.datajoint.io:3306
+Traceback (most recent call last):
+  File "/main/scripts/pop_geo.py", line 2, in <module>
+    Geometry.populate(reserve_jobs=True)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py", line 229, in populate
+    error = self._populate1(key, jobs, **populate_kwargs)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py", line 281, in _populate1
+    make(dict(key), **(make_kwargs or {}))
+  File "/main/neurophotonics/design.py", line 77, in make
+    df = pd.read_csv(gm_file)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/util/_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 680, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 575, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 933, in __init__
+    self._engine = self._make_engine(f, self.engine)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 1217, in _make_engine
+    self.handles = get_handle(  # type: ignore[call-overload]
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/common.py", line 789, in get_handle
+    handle = open(
+FileNotFoundError: [Errno 2] No such file or directory: 'Design2.csv'
+['podman', '--version', '']
+using podman version: 3.4.2
+podman logs docker_standard_worker_1
+exit code: 0
