@@ -1,0 +1,43 @@
+Connecting datajoint-worker@rds.datajoint.io:3306
+Connecting datajoint-worker@rds.datajoint.io:3306
+Connecting datajoint-worker@rds.datajoint.io:3306
+multiprocessing.pool.RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.9/multiprocessing/pool.py", line 125, in worker
+    result = (True, func(*args, **kwds))
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py", line 40, in _call_populate1
+    return process.table._populate1(key, process.jobs, **process.populate_kwargs)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py", line 281, in _populate1
+    make(dict(key), **(make_kwargs or {}))
+  File "/main/neurophotonics/design.py", line 77, in make
+    df = pd.read_csv(gm_file)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/util/_decorators.py", line 311, in wrapper
+    return func(*args, **kwargs)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 680, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 575, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 933, in __init__
+    self._engine = self._make_engine(f, self.engine)
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/parsers/readers.py", line 1217, in _make_engine
+    self.handles = get_handle(  # type: ignore[call-overload]
+  File "/opt/conda/lib/python3.9/site-packages/pandas/io/common.py", line 789, in get_handle
+    handle = open(
+FileNotFoundError: [Errno 2] No such file or directory: 'Design1.csv'
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/main/scripts/pop_geo.py", line 2, in <module>
+    Geometry.populate(reserve_jobs=True, display_progress=False, processes=1024)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/autopopulate.py", line 246, in populate
+    for error in pool.imap(_call_populate1, keys):
+  File "/opt/conda/lib/python3.9/multiprocessing/pool.py", line 870, in next
+    raise value
+FileNotFoundError: [Errno 2] No such file or directory: 'Design1.csv'
+['podman', '--version', '']
+using podman version: 3.4.2
+podman logs docker_standard_worker_1
+exit code: 0
