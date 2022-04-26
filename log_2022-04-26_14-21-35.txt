@@ -1,0 +1,33 @@
+Connecting datajoint-worker@rds.datajoint.io:3306
+Traceback (most recent call last):
+  File "/main/scripts/pop_fields.py", line 1, in <module>
+    from neurophotonics.fields import *
+  File "/main/neurophotonics/__init__.py", line 26, in <module>
+    from . import space, fields, design, sim, demix
+  File "/main/neurophotonics/fields.py", line 11, in <module>
+    class DSim(dj.Lookup):
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 174, in __call__
+    self._decorate_master(cls, context)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 184, in _decorate_master
+    self._decorate_table(
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/schemas.py", line 243, in _decorate_table
+    if len(contents) > len(instance):
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/expression.py", line 538, in __len__
+    self.primary_key, include_aliases=False
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/expression.py", line 96, in primary_key
+    return self.heading.primary_key
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/heading.py", line 128, in primary_key
+    return [k for k, v in self.attributes.items() if v.in_key]
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/heading.py", line 119, in attributes
+    self._init_from_database()  # lazy loading from database
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/heading.py", line 224, in _init_from_database
+    cur = conn.query(
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/connection.py", line 337, in query
+    self._execute_query(cursor, query, args, suppress_warnings)
+  File "/opt/conda/lib/python3.9/site-packages/datajoint/connection.py", line 294, in _execute_query
+    raise translate_query_error(err, query)
+datajoint.errors.AccessError: ('Insufficient privileges.', "SELECT command denied to user 'datajoint-worker'@'172.31.67.143' for table '#d_sim'", 'SHOW FULL COLUMNS FROM `#d_sim` IN `datajoint_neurophotonics_photonics`')
+['podman', '--version', '']
+using podman version: 3.4.2
+podman logs docker_standard_worker_1
+exit code: 0
