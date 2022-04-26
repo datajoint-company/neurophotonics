@@ -1,0 +1,33 @@
+name: Run EC2 instance
+
+on:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  launch_EC2:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    container:
+      image: amazon/aws-cli
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+    - name: Launch instance
+      run: aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
+
+  start_script:
+    runs-on: ubuntu-latest
+    needs: launch_EC2
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: add ssh key
+      run: echo -n ${{ secrets.ENCODED_KEY }} | base64 -d > Neurophotonics.pem
+    - name: set key permissions
+      run: chmod 600 Neurophotonics.pem
+    - name: Wait for instance to start # potential spot for improvement
+      run: sleep 20
+    - name: start remote script
+      run: ssh -o StrictHostKeyChecking=no -i Neurophotonics.pem ${{ secrets.REMOTE_ADDRESS }} 'screen -d -m sh startup.sh'
