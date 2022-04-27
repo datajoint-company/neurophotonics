@@ -79,12 +79,13 @@ class Geometry(dj.Imported):
         df_emitter = df[df["BoxType"] == "Emitter"]
         df_detector = df[df["BoxType"] == "Detector"]
 
+        detector_entry = []
         for i, data in df_detector.iterrows():
             d_center_x, d_center_y, d_center_z = [
                 float(x) for x in data["center"][1:-1].split(",")
             ]
             d_norm_x, d_norm_y, d_norm_z = [float(x) for x in data["normal"][1:-1].split(",")]
-            self.Detector.insert1(
+            detector_entry.append(
                 dict(
                     key,
                     detector=i,
@@ -101,17 +102,18 @@ class Geometry(dj.Imported):
                     d_height=data["h"],
                     d_width=data["w"],
                     d_thick=data["t"],
-                ),
-                skip_duplicates=True,
+                )
             )
+        self.Detector.insert(detector_entry, skip_duplicates=True)
 
+        emitter_entry = []
         for i, data in df_emitter.iterrows():
             e_center_x, e_center_y, e_center_z = [
                 float(x) for x in data["center"][1:-1].split(",")
             ]
             e_norm_x, e_norm_y, e_norm_z = [float(x) for x in data["normal"][1:-1].split(",")]
 
-            self.Emitter.insert1(
+            emitter_entry.append(
                 dict(
                     key,
                     emitter=i,
@@ -131,3 +133,4 @@ class Geometry(dj.Imported):
                 ),
                 skip_duplicates=True,
             )
+        self.Emitter.insert(emitter_entry, skip_duplicates=True)
