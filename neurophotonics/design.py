@@ -130,7 +130,6 @@ class Geometry(dj.Imported):
                     e_height=data["h"],
                     e_width=data["w"],
                     e_thick=data["t"],
-                ),
-                skip_duplicates=True,
+                )
             )
         self.Emitter.insert(emitter_entry)
