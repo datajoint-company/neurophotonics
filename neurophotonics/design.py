@@ -133,4 +133,4 @@ class Geometry(dj.Imported):
                 ),
                 skip_duplicates=True,
             )
-        self.Emitter.insert(emitter_entry, skip_duplicates=True)
+        self.Emitter.insert(emitter_entry)
