@@ -46,10 +46,10 @@ def ingest_design():
     Design.insert1(
         dict(
             design=0,
-            design_title="Year 1 Milestone Design",
+            design_title="Year-1 Design v101",
             design_description="3-probe configuration: 30 um separation and 75 degree rotation.",
             design_path="./",
-            geometry_file="Design1.csv",
+            geometry_file="Design_v101.csv",
             center_offset=(0, 0, 0),
             efields=0,
             dfields=0,
@@ -60,10 +60,10 @@ def ingest_design():
     Design.insert1(
         dict(
             design=1,
-            design_title="Year 2",
-            design_description="10-probe configuration.",
+            design_title="Year-1 Design v102",
+            design_description="3-probe configuration: 60 um separation and 75 degree rotation.",
             design_path="./",
-            geometry_file="Design2.csv",
+            geometry_file="Design_v102.csv",
             center_offset=(0, 0, 0),
             efields=0,
             dfields=0,
@@ -71,6 +71,36 @@ def ingest_design():
         skip_duplicates=True,
     )
 
-if __name__ == '__main__':
+    Design.insert1(
+        dict(
+            design=2,
+            design_title="Year-1 Design v103",
+            design_description="3-probe configuration: 120 um separation and 75 degree rotation.",
+            design_path="./",
+            geometry_file="Design_v103.csv",
+            center_offset=(0, 0, 0),
+            efields=0,
+            dfields=0,
+        ),
+        skip_duplicates=True,
+    )
+
+
+#    Design.insert1(
+#        dict(
+#            design=1,
+#            design_title="Year-2 Design v201",
+#            design_description="10-probe configuration.",
+#            design_path="./",
+#            geometry_file="Design_v201.csv",
+#            center_offset=(0, 0, 0),
+#            efields=0,
+#            dfields=0,
+#        ),
+#        skip_duplicates=True,
+#    )
+
+
+if __name__ == "__main__":
     ingest_ESimDSim()
     ingest_design()
