@@ -104,7 +104,7 @@ class Geometry(dj.Imported):
                     d_thick=data["t"],
                 )
             )
-        self.Detector.insert(detector_entry, skip_duplicates=True)
+        self.Detector.insert(detector_entry)
 
         emitter_entry = []
         for i, data in df_emitter.iterrows():
