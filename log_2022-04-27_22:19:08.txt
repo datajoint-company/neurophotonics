@@ -1,0 +1,63 @@
+STEP 1/6: FROM datajoint/djbase:py3.9-debian
+STEP 2/6: COPY ./setup.py ./requirements.txt ./README.md dj_local_conf.json ./
+--> Using cache 69e6df26346644695b792b7e4ea4b0bea751c7a2254fd9e67d70e2eec03a03e4
+--> 69e6df26346
+STEP 3/6: COPY scripts ./scripts
+--> Using cache 8a63621e75f0625671b1018bea06281e148ee8b8ba1381b93d2d732dd45567fb
+--> 8a63621e75f
+STEP 4/6: COPY ./neurophotonics ./neurophotonics
+--> Using cache c1ae834bfd10239730b758dd343c9434a7a6e172f9bb0f66767b6ae44d931b4a
+--> c1ae834bfd1
+STEP 5/6: COPY ./workdir ./workdir
+--> Using cache 8d5b2a4030b06c1b537e0f258c4cc2bb48d33cf32c2aaa223c56196db6637866
+--> 8d5b2a4030b
+STEP 6/6: RUN 	umask u=rwx,g=rwx,o-rwx && 	mkdir /main/data_store && 	pip install -e .
+--> Using cache bb83a3f1766aa0c872a6c93533127f998c142388eed0ea1d53c711840625aeaf
+COMMIT registry.vathes.com/sciops/neurophotonics:v0.0.1
+--> bb83a3f1766
+Successfully tagged registry.vathes.com/sciops/neurophotonics:v0.0.1
+bb83a3f1766aa0c872a6c93533127f998c142388eed0ea1d53c711840625aeaf
+75fc416517e1a77949b6365d2c2e0b8f390dac7a1542dcafbde9489c5b25bfa4
+Connecting datajoint-worker@rds.datajoint.io:3306
+/opt/conda/lib/python3.9/site-packages/datajoint/connection.py:341: UserWarning: MySQL server has gone away. Reconnecting to the server.
+  warnings.warn("MySQL server has gone away. Reconnecting to the server.")
+Connecting datajoint-worker@rds.datajoint.io:3306
+Efield already populated
+Dfield already populated
+Connecting datajoint-worker@rds.datajoint.io:3306
+Geometry already populated
+/opt/conda/lib/python3.9/site-packages/datajoint/connection.py:341: UserWarning: MySQL server has gone away. Reconnecting to the server.
+  warnings.warn("MySQL server has gone away. Reconnecting to the server.")
+/opt/conda/lib/python3.9/site-packages/datajoint/connection.py:341: UserWarning: MySQL server has gone away. Reconnecting to the server.
+  warnings.warn("MySQL server has gone away. Reconnecting to the server.")
+Connecting datajoint-worker@rds.datajoint.io:3306
+Tissue already populated
+Detection already populated
+ already populated
+/opt/conda/lib/python3.9/site-packages/datajoint/connection.py:341: UserWarning: MySQL server has gone away. Reconnecting to the server.
+  warnings.warn("MySQL server has gone away. Reconnecting to the server.")
+/opt/conda/lib/python3.9/site-packages/datajoint/connection.py:341: UserWarning: MySQL server has gone away. Reconnecting to the server.
+  warnings.warn("MySQL server has gone away. Reconnecting to the server.")
+/opt/conda/lib/python3.9/site-packages/datajoint/connection.py:341: UserWarning: MySQL server has gone away. Reconnecting to the server.
+  warnings.warn("MySQL server has gone away. Reconnecting to the server.")
+Connecting datajoint-worker@rds.datajoint.io:3306
+IlluminationCycle already populated
+Demix already populated
+Cosine already populated
+SpikeSNR already populated
+['podman', '--version', '']
+using podman version: 3.4.2
+** excluding:  set()
+podman build -t registry.vathes.com/sciops/neurophotonics:v0.0.1 -f .././docker/dev.Dockerfile ../
+exit code: 0
+['podman', 'network', 'exists', 'docker_default']
+podman create --name=docker_standard_worker_1 --label io.podman.compose.config-hash=123 --label io.podman.compose.project=docker --label io.podman.compose.version=0.0.1 --label com.docker.compose.project=docker --label com.docker.compose.project.working_dir=/home/ubuntu/docker --label com.docker.compose.project.config_files=./docker/docker-compose-dev.yaml --label com.docker.compose.container-number=1 --label com.docker.compose.service=standard_worker --env-file /home/ubuntu/docker/dev.env -e NEW_USER=datajoint -e DATABASE_PREFIX -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /home/ubuntu/setup.py:/main/setup.py -v /home/ubuntu/requirements.txt:/main/requirements.txt -v /home/ubuntu/README.md:/main/README.md -v /home/ubuntu/scripts:/main/scripts -v /home/ubuntu/neurophotonics:/main/neurophotonics -v /home/ubuntu/workdir:/main/workdir -v /home/ubuntu/dj_local_conf.json:/main/dj_local_conf.json --net docker_default --network-alias standard_worker -u 1000:anaconda registry.vathes.com/sciops/neurophotonics:v0.0.1 /bin/bash -c set -e
+python3 workdir/ingest.py
+python3 scripts/pop_fields.py
+python3 scripts/pop_geo.py
+python3 scripts/pop_sim.py
+python3 scripts/pop_demix.py
+
+exit code: 0
+podman start -a docker_standard_worker_1
+exit code: 0
