@@ -124,6 +124,7 @@ class Fluorescence(dj.Computed):
                 "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
             )
             dims = np.array(dims)
+            entries = []
             for (
                 emit_key,
                 e_center_x,
@@ -136,17 +137,19 @@ class Fluorescence(dj.Computed):
                 e_top_y,
                 e_top_z,
             ) in tqdm.tqdm(
-                (Geometry.Emitter & key & esim_key).fetch(
-                    "KEY",
-                    "e_center_x",
-                    "e_center_y",
-                    "e_center_z",
-                    "e_norm_x",
-                    "e_norm_y",
-                    "e_norm_z",
-                    "e_top_x",
-                    "e_top_y",
-                    "e_top_z",
+                zip(
+                    *(Geometry.Emitter & key & esim_key).fetch(
+                        "KEY",
+                        "e_center_x",
+                        "e_center_y",
+                        "e_center_z",
+                        "e_norm_x",
+                        "e_norm_y",
+                        "e_norm_z",
+                        "e_top_x",
+                        "e_top_y",
+                        "e_top_z",
+                    )
                 )
             ):
                 # cell positions in volume coordinates
@@ -181,7 +184,7 @@ class Fluorescence(dj.Computed):
                         ]
                     )
                 )
-                self.Emitter().insert1(
+                entries.append(
                     dict(
                         key,
                         **emit_key,
@@ -189,6 +192,7 @@ class Fluorescence(dj.Computed):
                         photons_per_joule=v.sum()
                     )
                 )
+            self.Emitter().insert(entries)
 
 
 @schema
@@ -219,6 +223,8 @@ class Detection(dj.Computed):
             )  # just in case. Max detection should already be ~0.5. Update after additional sim verifications
 
             dims = np.array(dims)
+
+            entries = []
             for (
                 detect_key,
                 d_center_x,
@@ -231,17 +237,19 @@ class Detection(dj.Computed):
                 d_top_y,
                 d_top_z,
             ) in tqdm.tqdm(
-                (Geometry.Detector & key & dsim_key).fetch(
-                    "KEY",
-                    "d_center_x",
-                    "d_center_y",
-                    "d_center_z",
-                    "d_norm_x",
-                    "d_norm_y",
-                    "d_norm_z",
-                    "d_top_x",
-                    "d_top_y",
-                    "d_top_z",
+                zip(
+                    *(Geometry.Detector & key & dsim_key).fetch(
+                        "KEY",
+                        "d_center_x",
+                        "d_center_y",
+                        "d_center_z",
+                        "d_norm_x",
+                        "d_norm_y",
+                        "d_norm_z",
+                        "d_top_x",
+                        "d_top_y",
+                        "d_top_z",
+                    )
                 )
             ):
                 # cell positions in volume coordinates
@@ -270,7 +278,7 @@ class Detection(dj.Computed):
                         for q in vxyz
                     ]
                 )
-                self.Detector().insert1(
+                entries.append(
                     dict(
                         key,
                         **detect_key,
@@ -278,3 +286,4 @@ class Detection(dj.Computed):
                         mean_probability=v.sum()
                     )
                 )
+            self.Detector().insert(entries)
