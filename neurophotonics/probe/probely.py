@@ -48,6 +48,10 @@ class Square:
         self.n = r.apply(self.n)
         self.centroid = r.apply(self.centroid)
 
+    def rotate_normal(self, seq="x", angles=45):
+        r = R.from_euler(seq, angles, degrees=True)
+        self.n = r.apply(self.n)
+
     def translate(self, r):
         self.tl += r
         self.bl += r
