@@ -1,6 +1,7 @@
 import pandas as pd
 import datajoint as dj
 from .fields import EField, DField
+from pathlib import Path
 
 schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
 
@@ -32,7 +33,7 @@ class Geometry(dj.Imported):
     class Emitter(dj.Part):
         definition = """  # subtable of Geometry
             -> master
-            emitter    :smallint
+            emitter    :int
             ----
             -> EField
             e_center_x: float  # um
@@ -52,7 +53,7 @@ class Geometry(dj.Imported):
     class Detector(dj.Part):
         definition = """  # subtable of Geometry
             -> master
-            detector   : smallint
+            detector   : int
             ----
             -> DField
             d_center_x : float  # um
