@@ -136,17 +136,19 @@ class Fluorescence(dj.Computed):
                 e_top_y,
                 e_top_z,
             ) in tqdm.tqdm(
-                (Geometry.Emitter & key & esim_key).fetch(
-                    "KEY",
-                    "e_center_x",
-                    "e_center_y",
-                    "e_center_z",
-                    "e_norm_x",
-                    "e_norm_y",
-                    "e_norm_z",
-                    "e_top_x",
-                    "e_top_y",
-                    "e_top_z",
+                zip(
+                    (Geometry.Emitter & key & esim_key).fetch(
+                        "KEY",
+                        "e_center_x",
+                        "e_center_y",
+                        "e_center_z",
+                        "e_norm_x",
+                        "e_norm_y",
+                        "e_norm_z",
+                        "e_top_x",
+                        "e_top_y",
+                        "e_top_z",
+                    )
                 )
             ):
                 # cell positions in volume coordinates
@@ -230,7 +232,7 @@ class Detection(dj.Computed):
                 d_top_x,
                 d_top_y,
                 d_top_z,
-            ) in tqdm.tqdm(
+            ) in tqdm.tqdm(zip(
                 (Geometry.Detector & key & dsim_key).fetch(
                     "KEY",
                     "d_center_x",
@@ -243,7 +245,7 @@ class Detection(dj.Computed):
                     "d_top_y",
                     "d_top_z",
                 )
-            ):
+            )):
                 # cell positions in volume coordinates
                 d_xyz = d_center_x, d_center_y, d_center_z
                 z_basis = np.array([d_norm_x, d_norm_y, d_norm_z])
