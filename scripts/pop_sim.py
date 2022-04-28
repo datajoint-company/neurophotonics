@@ -6,11 +6,11 @@ except ValueError:
     print("Tissue already populated")
 
 try:
-    Detection.populate(reserve_jobs=True, display_progress=False, processes=1024)
+    Detection.populate(reserve_jobs=True, display_progress=False)
 except ValueError:
     print("Detection already populated")
 
 try:
-    Fluorescence.populate(reserve_jobs=True, display_progress=False, processes=1024)
+    Fluorescence.populate(reserve_jobs=True, display_progress=False)
 except ValueError:
-    print(" already populated")
+    print("Fluorescence already populated")
