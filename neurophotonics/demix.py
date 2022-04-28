@@ -5,7 +5,7 @@ import tqdm
 from .sim import Fluorescence
 
 
-schema = dj.schema(dj.config['custom']['database.prefix'] + 'photonics')
+schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
 schema.spawn_missing_classes()
 
 
@@ -17,11 +17,19 @@ class Sample(dj.Lookup):
     density : int  # cells per cubic mm
     """
     contents = [
-        (0, 1000), (1, 3000), (2, 5000), (3, 10_000), 
-        (4, 20_000), (5, 35_000), (6, 50_000), (7, 75_000), (8, 100_000)]
+        (0, 1000),
+        (1, 3000),
+        (2, 5000),
+        (3, 10_000),
+        (4, 20_000),
+        (5, 35_000),
+        (6, 50_000),
+        (7, 75_000),
+        (8, 100_000),
+    ]
 
 
-@schema 
+@schema
 class IlluminationCycle(dj.Computed):
     definition = """
     -> Fluorescence
@@ -33,12 +41,12 @@ class IlluminationCycle(dj.Computed):
 
     def make(self, key):
         emission = np.stack(
-            [np.float32(x)
-             for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  # emitters x sources
+            [np.float32(x) for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")]
+        )  # emitters x sources
 
         detection = np.stack(
-            [np.float32(x)
-             for x in (Detection.Detector & key).fetch('detect_probabilities')])  # detectors x sources
+            [np.float32(x) for x in (Detection.Detector & key).fetch("detect_probabilities")]
+        )  # detectors x sources
 
         target_rank = 140_000
 
@@ -59,7 +67,7 @@ class IlluminationCycle(dj.Computed):
             qq[:, i] += qq[:, j]
             qq = np.delete(qq, j, 0)
             qq = np.delete(qq, j, 1)
-  
+
         self.insert1(dict(key, nframes=nframes, illumination=illumination))
 
 
@@ -84,48 +92,59 @@ class Demix(dj.Computed):
         seed = 0
 
         # load the emission and detection matrices
-        npoints, volume = (Tissue & key).fetch1('npoints', 'volume')
-        target_density = (Sample & key).fetch1('density')
+        npoints, volume = (Tissue & key).fetch1("npoints", "volume")
+        target_density = (Sample & key).fetch1("density")
 
         selection = np.r_[:npoints] < int(np.round(target_density) * volume)
         np.random.seed(seed)
         np.random.shuffle(selection)
 
-        illumination = (IlluminationCycle & key).fetch1('illumination')
+        illumination = (IlluminationCycle & key).fetch1("illumination")
         nframes = illumination.shape[0]
-        illumination = power * illumination / illumination.sum()  # watts averaged over the entire cycle
+        illumination = (
+            power * illumination / illumination.sum()
+        )  # watts averaged over the entire cycle
         avg = nframes * illumination[illumination > 0].mean()
 
         emission = np.stack(
-            [np.float32(x[selection])
-             for x in (Fluorescence.Emitter & key).fetch('reemitted_photons')])  # emitters x sources
+            [
+                np.float32(x[selection])
+                for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")
+            ]
+        )  # emitters x sources
         emission = dt * illumination @ emission  # photons per frame
 
         detection = np.stack(
-            [np.float32(x[selection])
-             for x in (Detection.Detector & key).fetch('detect_probabilities')])  # detectors x sources
+            [
+                np.float32(x[selection])
+                for x in (Detection.Detector & key).fetch("detect_probabilities")
+            ]
+        )  # detectors x sources
 
         # construct the mixing matrix mix: nchannels x ncells
         # mix = number of photons from neuron per frame at full fluorescence
         ncells = detection.shape[1]
         ndetectors = detection.shape[0]
         nchannels = nframes * ndetectors
-        mix = np.ndarray(dtype='float32', shape=(nchannels, ncells))
+        mix = np.ndarray(dtype="float32", shape=(nchannels, ncells))
         for ichannel in range(0, nchannels, ndetectors):
-            mix[ichannel:ichannel + ndetectors] = detection * emission[ichannel//ndetectors]
+            mix[ichannel : ichannel + ndetectors] = detection * emission[ichannel // ndetectors]
 
         # normalize channels by their noise
         mean_fluorescence = 0.03
         nu = dark_noise * dt / nframes
-        weights = 1 / np.sqrt(mix.sum(axis=1, keepdims=True) * mean_fluorescence + nu)  # used to be axis=0
+        weights = 1 / np.sqrt(
+            mix.sum(axis=1, keepdims=True) * mean_fluorescence + nu
+        )  # used to be axis=0
         mix *= weights
 
         # normalization
         kmax = 1e6
         square = mix.T @ mix
         identity = np.identity(mix.shape[1])
-        alpha = np.sqrt(scipy.linalg.eigh(
-            square, eigvals_only=True, eigvals=(ncells-1, ncells-1))[0]) / (2 * kmax)
+        alpha = np.sqrt(
+            scipy.linalg.eigh(square, eigvals_only=True, eigvals=(ncells - 1, ncells - 1))[0]
+        ) / (2 * kmax)
         square += alpha**2 * identity
 
         # demix matrix
@@ -134,14 +153,17 @@ class Demix(dj.Computed):
         # bias matrix
         bias = demix @ mix - identity
 
-        self.insert1(dict(
-            key,
-            selection=selection,
-            avg_emitter_power=avg * 1e6,
-            mix_norm=np.linalg.norm(mix, axis=0),
-            demix_norm=np.linalg.norm(demix, axis=1),
-            bias_norm=np.linalg.norm(bias, axis=1),
-            trans_bias_norm=np.linalg.norm(bias, axis=0)))
+        self.insert1(
+            dict(
+                key,
+                selection=selection,
+                avg_emitter_power=avg * 1e6,
+                mix_norm=np.linalg.norm(mix, axis=0),
+                demix_norm=np.linalg.norm(demix, axis=1),
+                bias_norm=np.linalg.norm(bias, axis=1),
+                trans_bias_norm=np.linalg.norm(bias, axis=0),
+            )
+        )
 
 
 @schema
@@ -154,7 +176,9 @@ class Cosine(dj.Computed):
 
     def make(self, key):
         max_bias = 0.01
-        mix_norm, demix_norm, bias_norm = (Demix & key).fetch1('mix_norm', 'demix_norm', 'bias_norm')
+        mix_norm, demix_norm, bias_norm = (Demix & key).fetch1(
+            "mix_norm", "demix_norm", "bias_norm"
+        )
         cosines = (bias_norm < max_bias) / (mix_norm * demix_norm)
         self.insert1(dict(key, cosines=cosines))
 
@@ -169,10 +193,12 @@ class SpikeSNR(dj.Computed):
 
     def make(self, key):
         max_bias = 0.01
-        delta = 0.3*0.4
+        delta = 0.3 * 0.4
         tau = 1.0
         dt = 0.02  # must match the one in Demix
-        demix_norm, bias = (Demix & key).fetch1('demix_norm', 'bias_norm')
-        rho = np.exp(-2*np.r_[0:6 * tau:dt] / tau).sum()  # SNR improvement by matched filter
-        snr = (bias < max_bias) * rho * delta/demix_norm
+        demix_norm, bias = (Demix & key).fetch1("demix_norm", "bias_norm")
+        rho = np.exp(
+            -2 * np.r_[0 : 6 * tau : dt] / tau
+        ).sum()  # SNR improvement by matched filter
+        snr = (bias < max_bias) * rho * delta / demix_norm
         self.insert1(dict(key, snr=snr))
