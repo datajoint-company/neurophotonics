@@ -85,20 +85,19 @@ def ingest_design():
         skip_duplicates=True,
     )
 
-
-#    Design.insert1(
-#        dict(
-#            design=1,
-#            design_title="Year-2 Design v201",
-#            design_description="10-probe configuration.",
-#            design_path="./",
-#            geometry_file="Design_v201.csv",
-#            center_offset=(0, 0, 0),
-#            efields=0,
-#            dfields=0,
-#        ),
-#        skip_duplicates=True,
-#    )
+    Design.insert1(
+        dict(
+            design=3,
+            design_title="Year-2 Design v201",
+            design_description="10-probe configuration. Straight emission beams",
+            design_path="./",
+            geometry_file="Design_v201.csv",
+            center_offset=(0, 0, 0),
+            efields=0,
+            dfields=0,
+        ),
+        skip_duplicates=True,
+    )
 
 
 if __name__ == "__main__":
