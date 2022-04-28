@@ -1,7 +1,7 @@
 import pandas as pd
 import datajoint as dj
 from .fields import EField, DField
-from pathlib import Path
+
 
 schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
 
