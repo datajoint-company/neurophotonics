@@ -1,4 +1,4 @@
-datajoint
+datajoint @ git+https://github.com/Ernaldis/datajoint-python.git
 numpy
 scipy
 matplotlib

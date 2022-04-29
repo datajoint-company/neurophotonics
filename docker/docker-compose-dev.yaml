@@ -31,8 +31,14 @@ services:
       - -c
       - |
         set -e
+        #tail -f /dev/null
+        echo "Running ingest..."
         python3 workdir/ingest.py
+        echo "Running pop_fields..."
         python3 scripts/pop_fields.py
+        echo "Running pop_geo..."
         python3 scripts/pop_geo.py
+        echo "Running pop_sim..."
         python3 scripts/pop_sim.py
+        echo "Running pop_demix..."
         python3 scripts/pop_demix.py
