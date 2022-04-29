@@ -16,6 +16,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
     - name: Launch instance
+      if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
       run: aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
 
   start_script:
