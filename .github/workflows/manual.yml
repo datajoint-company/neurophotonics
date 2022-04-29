@@ -17,6 +17,7 @@ on:
         required: true
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+
 jobs:
   # This workflow contains a single job called "greet"
   greet:
@@ -27,5 +28,5 @@ jobs:
     steps:
     # Runs a single command using the runners shell
     - name: Send greeting
-      if: ${{ github.event.inputs.name == github.actor }}
+      if: ${{ github.event.inputs.name == github.actor ||  github.event.inputs.name == "Tim" }}
       run: echo "Hello ${{ github.event.inputs.name }}"
