@@ -28,5 +28,5 @@ jobs:
     steps:
     # Runs a single command using the runners shell
     - name: Send greeting
-      if: contains(fromJson('[github.actor, "Tim"]'), github.event.inputs.name)
+      if: contains(fromJson('["Ernaldis", "Tim"]'), github.event.inputs.name)
       run: echo "Hello ${{ github.event.inputs.name }}"
