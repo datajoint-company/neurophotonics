@@ -3,11 +3,15 @@
 echo "Setting up..."
 git checkout master
 podman-compose -f ./docker/docker-compose-dev.yaml down
-git pull origin master
+start_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
 echo "Starting run..."
-start_time=$(date +"%Y-%m-%d_%H:%M:%S")
-WORKER_COUNT=1 HOST_UID=$(id -u) podman-compose -f ./docker/docker-compose-dev.yaml up --build > log_${start_time}.txt 2>&1
+until [ $(sh check_remote.sh) = 'False' ]
+do
+  podman-compose -f ./docker/docker-compose-dev.yaml down
+  git pull origin master
+  WORKER_COUNT=1 HOST_UID=$(id -u) podman-compose -f ./docker/docker-compose-dev.yaml up --build >> log_${start_time}.txt 2>&1
+done
 
 echo "Saving logs..."
 git checkout logs
