@@ -1,13 +1,0 @@
-Connecting datajoint-worker@rds.datajoint.io:3306
-DField already populated
-Connecting datajoint-worker@rds.datajoint.io:3306
-Connecting datajoint-worker@rds.datajoint.io:3306
-Detection: 0it [00:00, ?it/s]Detection: 0it [00:00, ?it/s]
-Fluorescence: 0it [00:00, ?it/s]Fluorescence: 0it [00:00, ?it/s]
-Connecting datajoint-worker@rds.datajoint.io:3306
-IlluminationCycle: 0it [00:00, ?it/s]IlluminationCycle: 0it [00:00, ?it/s]
-Demix: 0it [00:00, ?it/s]Demix: 0it [00:00, ?it/s]
-['podman', '--version', '']
-using podman version: 3.4.2
-podman logs docker_standard_worker_1
-exit code: 0

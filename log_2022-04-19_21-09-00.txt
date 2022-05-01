@@ -1,6 +1,0 @@
-Connecting ernaldis@rds.datajoint.io:3306
-SIGTERM received
-['podman', '--version', '']
-using podman version: 3.4.2
-podman logs docker_standard_worker_1
-exit code: 0
