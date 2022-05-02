@@ -1,0 +1,5 @@
+Error: no container with name or ID "docker_standard_worker_1" found: no such container
+['podman', '--version', '']
+using podman version: 3.4.2
+podman logs docker_standard_worker_1
+exit code: 125
