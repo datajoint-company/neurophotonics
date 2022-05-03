@@ -75,7 +75,8 @@ class Geometry(dj.Imported):
 
         efields, dfields = (Design & key).fetch1("efields", "dfields")
         gm_file = (Design & key).fetch1("geometry_file")
-        df = pd.read_csv("./workdir/" + gm_file)
+        #df = pd.read_csv("./workdir/" + gm_file)
+        df = pd.read_csv(gm_file)
 
         df_emitter = df[df["BoxType"] == "Emitter"]
         df_detector = df[df["BoxType"] == "Detector"]
