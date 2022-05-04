@@ -163,13 +163,13 @@ class Efield2dimage(dj.Computed):
     definition = """
     # Emission field images in 2D.
     -> Esim
-    ---
-    image: blob@photonics
     pov: smallint  # point of view direction (compression direction)
+    ---
+    projected_image: blob@photonics
     """
 
     def make(self, key):
         volume = (EField & key).fetch1("volume")  # There will be only 1 volume per key.
 
         for pov in [0, 1, 2]:
-            self.insert1(dict(key, image=volume.sum(axis=pov), pov=pov))
+            self.insert1(dict(key, pov=pov, projected_image=volume.sum(axis=pov)))
