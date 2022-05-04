@@ -177,13 +177,6 @@ class Fluorescence(dj.Computed):
 
         with Pool(cpu_count()) as p:
             p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
-        # try:
-        #    with Pool(cpu_count()) as p:
-        #        p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
-        # except Exception as e:
-        #    print(e)
-        #    with dj.config(safemode=False):
-        #        (self & key).delete()
 
         gc.collect()
 
