@@ -461,7 +461,7 @@ class Probe:
                 z=zs,
                 line=dict(color="#000000"),
                 mode="lines",
-                name="",
+                name=self.name,
                 surfaceaxis=1,
                 surfacecolor=probe_surfacecolor,
                 showlegend=False,

@@ -272,13 +272,50 @@ def design202(save=False, output="Design_v202.csv"):
         ]
     )
 
-    # Position the Probes
-    for i, probe in enumerate(PG.probes):
-        if not i % 2:
-            probe.rotate("z", 180)  # Around the origin (0, 0, 0)
-            probe.translate([-150.0 * len(PG.probes) / 2 + 0.5 + i * 150.0, 75, 0])
-        else:
-            probe.translate([-150.0 * len(PG.probes) / 2 + 0.5 + i * 150.0, -75, 0])
+    def rotate_epixels(probe):
+        # Rotate detectors in each column with the given angles
+
+        for i, epixel in enumerate(probe.e_pixels):
+            if i < 60:
+                angle = -45.0
+                epixel.rotate_normal("z", angle)
+            elif i >= 60 and i < 120:
+                angle = 45
+                epixel.rotate_normal("z", angle)
+            elif i >= 120 and i < 180:
+                if i % 2:
+                    angle = -45
+                else:
+                    angle = 45
+                epixel.rotate_normal("x", angle)
+            elif i >= 180 and i < 240:
+                angle = -45
+                epixel.rotate_normal("z", angle)
+            elif i >= 240:
+                angle = 45
+                epixel.rotate_normal("z", angle)
+
+    def position(PG):
+        # Position the Probes
+        for i, probe in enumerate(PG.probes):
+            if not i % 2:  # evens
+                probe.rotate("z", 180)  # Around the origin (0, 0, 0)
+                # Emission beams of the end-probes will be directed to the opposite shank.
+                if i == 0:
+                    [e_pixel.rotate_normal("z", 45) for e_pixel in probe.e_pixels]
+                else:
+                    rotate_epixels(probe)
+                probe.translate([-150.0 * len(PG.probes) / 2 + 0.5 + i * 150.0, 75, 0])
+
+            else:  # odds
+                # Emission beams of the end-probes will be directed to the opposite shank.
+                if i == 9:
+                    [e_pixel.rotate_normal("z", 45) for e_pixel in probe.e_pixels]
+                else:
+                    rotate_epixels(probe)
+                probe.translate([-150.0 * len(PG.probes) / 2 + 0.5 + i * 150.0, -75, 0])
+
+    position(PG)
 
     if save:
         df = PG.to_df()
