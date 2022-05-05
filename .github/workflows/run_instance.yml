@@ -16,10 +16,10 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
     - name: Launch instance
-      #if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
-      #run: aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
-      if: aws ec2 describe-instances --output text --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]" == "stopped"
-      run: echo "yes"
+      if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
+      run: aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
+      #if: aws ec2 describe-instances --output text --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]" == "stopped"
+      #run: echo "yes"
 
 #  start_script:
 #    runs-on: ubuntu-latest
