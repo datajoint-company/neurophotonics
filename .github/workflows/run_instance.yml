@@ -18,7 +18,7 @@ jobs:
     - name: Launch instance
       if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
       #run: aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
-      run: aws ec2 describe-instances --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]"
+      run: aws ec2 describe-instances --output text --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]"
 
 #  start_script:
 #    runs-on: ubuntu-latest
