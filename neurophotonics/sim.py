@@ -176,12 +176,12 @@ class Fluorescence(dj.Computed):
             Fluorescence.Emitter.insert1(entry, ignore_extra_fields=True)
 
         try:
-           with Pool(cpu_count()) as p:
-               p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
+            with Pool(cpu_count()) as p:
+                p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
         except Exception as e:
-           print(e)
-           with dj.config(safemode=False):
-               (self & key).delete()
+            print(e)
+            with dj.config(safemode=False):
+                (self & key).delete()
 
         gc.collect()
 
