@@ -156,3 +156,20 @@ class EField(dj.Computed):
         axis.add_artist(scale_bar)
         title = f"{title}\n{info['total_photons'] / 1e6:0.2f} million simulated photons"
         axis.set_title(title)
+
+
+# @schema
+# class Efield2dimage(dj.Computed):
+#     definition = """
+#     # Emission field images in 2D.
+#     -> Esim
+#     pov: smallint  # point of view direction (compression direction)
+#     ---
+#     projected_image: blob@photonics
+#     """
+
+#     def make(self, key):
+#         volume = (EField & key).fetch1("volume")  # There will be only 1 volume per key.
+
+#         for pov in [0, 1, 2]:
+#             self.insert1(dict(key, pov=pov, projected_image=volume.sum(axis=pov)))

@@ -98,7 +98,9 @@ class Square:
             )
         )
 
-    def plot_squares3d(self, fig=None, show=False, surfacecolor="turquoise", cone=False):
+    def plot_squares3d(
+        self, fig=None, show=False, surfacecolor="turquoise", cone=False, size_ref=None
+    ):
         if not fig:
             fig = go.Figure()
 
@@ -123,7 +125,8 @@ class Square:
         )
 
         if cone:
-            size_ref = np.mean([norm(self.bl - self.br), norm(self.br - self.tr)]) * 0.05
+            if not size_ref:
+                size_ref = np.mean([norm(self.bl - self.br), norm(self.br - self.tr)]) * 0.05
             fig.add_traces(
                 go.Cone(
                     x=[
@@ -440,6 +443,7 @@ class Probe:
                     sizemode="absolute",
                     sizeref=size_ref,
                     anchor="tip",
+                    showscale=False,
                 )
             )
 
@@ -457,7 +461,7 @@ class Probe:
                 z=zs,
                 line=dict(color="#000000"),
                 mode="lines",
-                name="",
+                name=self.name,
                 surfaceaxis=1,
                 surfacecolor=probe_surfacecolor,
                 showlegend=False,
@@ -467,14 +471,18 @@ class Probe:
         # E-pixels
         if e_pixels:
             [
-                e_pixel.plot_squares3d(fig=fig, surfacecolor=e_pixel_surfacecolor)
+                e_pixel.plot_squares3d(
+                    fig=fig, surfacecolor=e_pixel_surfacecolor, cone=True, size_ref=size_ref
+                )
                 for e_pixel in self.e_pixels
             ]
 
         # D-pixels
         if d_pixels:
             [
-                d_pixel.plot_squares3d(fig=fig, surfacecolor=d_pixel_surfacecolor)
+                d_pixel.plot_squares3d(
+                    fig=fig, surfacecolor=d_pixel_surfacecolor, cone=True, size_ref=size_ref
+                )
                 for d_pixel in self.d_pixels
             ]
 
@@ -488,7 +496,7 @@ class Probe:
         )
         fig.update_layout(coloraxis_showscale=False)
 
-        config = {"displayModeBar": True}
+        config = {"displayModeBar": False}
         if show:
             fig.show(config=config)
 
