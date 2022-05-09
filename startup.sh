@@ -6,7 +6,7 @@ podman-compose -f ./docker/docker-compose-dev.yaml down
 start_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
 echo "Starting run..."
-until [ $(sh check_remote.sh) = 'False' ]
+until [ $(sh check_remote.sh) = 'False' && $(bash check_db.sh) = '0']
 do
   podman-compose -f ./docker/docker-compose-dev.yaml down
   git pull origin master
