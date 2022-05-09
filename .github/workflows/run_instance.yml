@@ -12,7 +12,7 @@ jobs:
     - name: Get instance state
       run: state=$(docker run --rm -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} amazon/aws-cli ec2 describe-instances --output text --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]")
     - name: Check instance state
-      run: if [ $state == 'stopped' ]; then exit 1; fi;
+      run: if [[ "$state" == "stopped" ]]; then exit 1; fi;
     - name: Launch instance
       if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
       run: docker run --rm -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} amazon/aws-cli ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
