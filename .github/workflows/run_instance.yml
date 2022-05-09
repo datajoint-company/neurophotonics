@@ -10,9 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Get instance state
-      run: state=$(docker run --rm -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} amazon/aws-cli ec2 describe-instances --output text --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]")
+      id: get
+      run: OUTPUT=$(docker run --rm -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} amazon/aws-cli ec2 describe-instances --output text --filters Name=instance-id,Values=${{ secrets.INSTANCE_ID }} --query "Reservations[].Instances[].State[].Name[]") && echo "::set-output name=OUTPUT::$OUTPUT"
     - name: Check instance state
-      if: ${{ state == "running" }}
+      if: steps.get.outputs.OUTPUT == "running"
       run: exit 1
     - name: Launch instance
       if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
