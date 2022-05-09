@@ -1,5 +1,6 @@
 import pandas as pd
 import datajoint as dj
+from pathlib import Path
 from .fields import EField, DField
 
 
@@ -13,7 +14,7 @@ class Design(dj.Lookup):
     ---
     design_title      : varchar(255)
     design_description: varchar(1000)
-    design_path       : varchar(255)
+    design_path       : varchar(255)  # directory relative to the project root, containing the geometry files
     geometry_file     : varchar(255)
     center_offset     : blob          # offset from legacy implementation
     efields           : blob          # efield selection
@@ -74,8 +75,11 @@ class Geometry(dj.Imported):
         self.insert1(key)
 
         efields, dfields = (Design & key).fetch1("efields", "dfields")
-        gm_file = (Design & key).fetch1("geometry_file")
-        df = pd.read_csv("./workdir/" + gm_file)
+        gm_file, design_path = (Design & key).fetch1("geometry_file", "design_path")
+
+        gm_fullpath = Path(".") / design_path / gm_file
+
+        df = pd.read_csv(gm_fullpath)
 
         df_emitter = df[df["BoxType"] == "Emitter"]
         df_detector = df[df["BoxType"] == "Detector"]
