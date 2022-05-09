@@ -17,7 +17,7 @@ jobs:
     steps:
     - name: Launch instance
       if: contains(fromJson('["Ernaldis", "tdincer", "ttngu207", "dimitri-yatsenko", "guzman-raphael"]'), github.actor)
-      run: docker run --rm -it -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} amazon/aws-cli aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
+      run: docker run --rm -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} -e AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }} -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} amazon/aws-cli aws ec2 start-instances --instance-ids ${{ secrets.INSTANCE_ID }}
 
 #  start_script:
 #    runs-on: ubuntu-latest
