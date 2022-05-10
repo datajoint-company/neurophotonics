@@ -5,7 +5,7 @@ print(
     "keys processed:",
     keys_used(
         IlluminationCycle.populate(
-            reserve_jobs=True, processes=1024, display_progress=False
+            reserve_jobs=True, processes=2, display_progress=False
         )
     )
     + keys_used(
