@@ -4,12 +4,12 @@ from scripts.helper import keys_used
 print(
     "keys processed:",
     keys_used(
-        Tissue.populate(reserve_jobs=True, display_progress=False, processes=8)
+        Tissue.populate(reserve_jobs=True, display_progress=False, processes=1)
     )
     + keys_used(
-        Detection.populate(reserve_jobs=True, display_progress=False, processes=8)
+        Detection.populate(reserve_jobs=True, display_progress=False, processes=1)
     )
     + keys_used(
-        Fluorescence.populate(reserve_jobs=True, display_progress=False, processes=8)
+        Fluorescence.populate(reserve_jobs=True, display_progress=False, processes=1)
     ),
 )
