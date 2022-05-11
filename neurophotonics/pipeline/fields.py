@@ -3,8 +3,10 @@ import datajoint as dj
 from .space import Space
 from matplotlib import pyplot as plt
 
+from .. import db_prefix
 
-schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
+
+schema = dj.schema(db_prefix + "photonics")
 
 
 @schema

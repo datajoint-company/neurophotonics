@@ -9,8 +9,11 @@ from multiprocess import Pool
 from multiprocess import cpu_count
 import gc
 
-schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
-schema.spawn_missing_classes()
+from .. import db_prefix
+
+from .design import Geometry
+
+schema = dj.schema(db_prefix + "photonics")
 
 
 @schema
