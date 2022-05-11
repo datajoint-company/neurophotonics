@@ -6,7 +6,7 @@ podman-compose -f ./docker/docker-compose-dev.yaml down
 start_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
 echo "Starting run..."
-until [ $(bash check_remote.sh) && $(bash check_db.sh) = '0']
+until [ $([ "$(git rev-parse HEAD)" = "$(git ls-remote origin | grep HEAD | awk '{print $1;}')" ]) && $(bash check_db.sh) = '0']
 do
   podman-compose -f ./docker/docker-compose-dev.yaml down
   git pull origin master
