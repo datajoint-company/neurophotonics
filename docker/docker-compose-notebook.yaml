@@ -9,6 +9,8 @@ services:
       # only necessary if rebuilding image
       context: ../
       dockerfile: ./docker/standard_worker.Dockerfile
+      args:
+        - mode=djlab
     image: registry.vathes.com/sciops/neurophotonics:v0.0.1
     env_file: dev.env
     environment:
@@ -26,10 +28,5 @@ services:
       - ../workdir:/main/workdir
       - ../dj_local_conf.json:/main/dj_local_conf.json
     scale: ${WORKER_COUNT:-1}
-    command:
-      - /bin/bash
-      - -c
-      - |
-        set -e
-        echo "Running standard_worker..."
-        run_workflow standard_worker
+    ports:
+      - 8888:8888

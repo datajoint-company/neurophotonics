@@ -1,4 +1,5 @@
-FROM datajoint/djbase:py3.9-debian
+ARG mode=djlab
+FROM datajoint/${mode}
 
 RUN \
   echo git >> /tmp/apt_requirements.txt && \
