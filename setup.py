@@ -28,4 +28,7 @@ setup(
     scripts=[],
     python_requires='>=3.6',
     install_requires=requirements,
+    entry_points={
+        'console_scripts': ['run_workflow=neurophotonics.populate.process:cli'],
+    }
 )

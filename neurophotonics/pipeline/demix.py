@@ -2,11 +2,12 @@ import datajoint as dj
 import numpy as np
 import scipy
 import tqdm
-from .sim import Fluorescence
+
+from .. import db_prefix
+from .sim import Fluorescence, Detection, Tissue
 
 
-schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
-schema.spawn_missing_classes()
+schema = dj.schema(db_prefix + "photonics")
 
 
 @schema

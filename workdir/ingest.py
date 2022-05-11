@@ -1,6 +1,7 @@
-from neurophotonics.fields import ESim, DSim
-from neurophotonics.design import Design
 import numpy as np
+
+from neurophotonics.pipeline.fields import ESim, DSim
+from neurophotonics.pipeline.design import Design
 
 
 def ingest_ESimDSim():
@@ -142,6 +143,10 @@ def ingest_design():
     )
 
 
-if __name__ == "__main__":
+def main():
     ingest_ESimDSim()
     ingest_design()
+
+
+if __name__ == "__main__":
+    main()
