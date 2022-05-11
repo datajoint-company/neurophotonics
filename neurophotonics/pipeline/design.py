@@ -1,10 +1,12 @@
 import pandas as pd
 import datajoint as dj
 from pathlib import Path
+
+from .. import db_prefix
 from .fields import EField, DField
 
 
-schema = dj.schema(dj.config["custom"]["database.prefix"] + "photonics")
+schema = dj.schema(db_prefix + "photonics")
 
 
 @schema
@@ -77,7 +79,7 @@ class Geometry(dj.Imported):
         efields, dfields = (Design & key).fetch1("efields", "dfields")
         gm_file, design_path = (Design & key).fetch1("geometry_file", "design_path")
 
-        gm_fullpath = Path(".") / design_path / gm_file
+        gm_fullpath = Path("..") / design_path / gm_file
 
         df = pd.read_csv(gm_fullpath)
 

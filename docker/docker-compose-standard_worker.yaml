@@ -1,6 +1,6 @@
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-dev.yaml up -d
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-dev.yaml up --build -d
-# docker-compose -f ./docker/docker-compose-dev.yaml down
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml up -d
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml up --build -d
+# docker-compose -f ./docker/docker-compose-standard_worker.yaml down
 # Build this image from neurophotonics level on your local machine
 version: '2.4'
 services:
@@ -8,7 +8,7 @@ services:
     build:
       # only necessary if rebuilding image
       context: ../
-      dockerfile: ./docker/dev.Dockerfile
+      dockerfile: standard_worker.Dockerfile
     image: registry.vathes.com/sciops/neurophotonics:v0.0.1
     env_file: dev.env
     environment:
@@ -31,14 +31,5 @@ services:
       - -c
       - |
         set -e
-        #tail -f /dev/null
-        echo "Running ingest..."
-        python3 workdir/ingest.py
-        echo "Running pop_fields..."
-        python3 scripts/pop_fields.py
-        echo "Running pop_geo..."
-        python3 scripts/pop_geo.py
-        echo "Running pop_sim..."
-        python3 scripts/pop_sim.py
-        echo "Running pop_demix..."
-        python3 scripts/pop_demix.py
+        echo "Running standard_worker..."
+        run_workflow standard_worker

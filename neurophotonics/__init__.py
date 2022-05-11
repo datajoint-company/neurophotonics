@@ -22,5 +22,3 @@ dj.config["stores"] = {
         stage="/main/datajoint/blob",
     ),
 }
-
-from . import space, fields, design, sim, demix

@@ -4,3 +4,5 @@ scipy
 matplotlib
 matplotlib-scalebar
 multiprocess
+
+datajoint-utilities @ git+https://github.com/datajoint-company/datajoint-utilities.git
