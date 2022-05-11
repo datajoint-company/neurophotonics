@@ -1,11 +1,12 @@
 from neurophotonics.fields import *
+from scripts.helper import keys_used
 
-try:
-    EField.populate(reserve_jobs=True, processes=1024, display_progress=False)
-except ValueError:
-    print("Efield already populated")
-
-try:
-    DField.populate(reserve_jobs=True, processes=1024, display_progress=False)
-except ValueError:
-    print("Dfield already populated")
+print(
+    "keys processed:",
+    keys_used(
+        EField.populate(reserve_jobs=True, processes=1024, display_progress=False)
+    )
+    + keys_used(
+        DField.populate(reserve_jobs=True, processes=1024, display_progress=False)
+    ),
+)
