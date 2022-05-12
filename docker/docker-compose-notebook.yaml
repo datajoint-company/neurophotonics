@@ -15,18 +15,18 @@ services:
     env_file: dev.env
     environment:
       - NEW_USER=datajoint
+      - NEW_HOME=/home/.anaconda
       - DATABASE_PREFIX
       - DISPLAY
     user: ${HOST_UID}:anaconda
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ../setup.py:/main/setup.py
-      - ../requirements.txt:/main/requirements.txt
-      - ../README.md:/main/README.md
-      - ../scripts:/main/scripts
-      - ../neurophotonics:/main/neurophotonics
-      - ../workdir:/main/workdir
-      - ../dj_local_conf.json:/main/dj_local_conf.json
+      - ../setup.py:/home/.anaconda/setup.py
+      - ../requirements.txt:/home/.anaconda/requirements.txt
+      - ../README.md:/home/.anaconda/README.md
+      - ../scripts:/home/.anaconda/scripts
+      - ../neurophotonics:/home/.anaconda/neurophotonics
+      - ../workdir:/home/.anaconda/workdir
+      - ../dj_local_conf.json:/home/.anaconda/dj_local_conf.json
     scale: ${WORKER_COUNT:-1}
     ports:
       - 8888:8888
