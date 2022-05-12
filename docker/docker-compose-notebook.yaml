@@ -1,6 +1,5 @@
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard up -d
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard up --build -d
-# docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard down
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-notebook.yaml -p neurophotonics_standard up --build -d
+# docker-compose -f ./docker/docker-compose-notebook.yaml -p neurophotonics_standard down
 # Build this image from neurophotonics level on your local machine
 version: '2.4'
 services:
@@ -11,13 +10,11 @@ services:
       dockerfile: ./docker/standard_worker.Dockerfile
       args:
         - mode=djlab
-    image: registry.vathes.com/sciops/neurophotonics:v0.0.1
+    image: registry.vathes.com/sciops/neurophotonics-notebook:v0.0.1
     env_file: dev.env
     environment:
       - NEW_USER=datajoint
       - NEW_HOME=/home/.anaconda
-      - DATABASE_PREFIX
-      - DISPLAY
     user: ${HOST_UID}:anaconda
     volumes:
       - ../setup.py:/home/.anaconda/setup.py
@@ -26,7 +23,6 @@ services:
       - ../scripts:/home/.anaconda/scripts
       - ../neurophotonics:/home/.anaconda/neurophotonics
       - ../workdir:/home/.anaconda/workdir
-      - ../dj_local_conf.json:/home/.anaconda/dj_local_conf.json
     scale: ${WORKER_COUNT:-1}
     ports:
       - 8888:8888
