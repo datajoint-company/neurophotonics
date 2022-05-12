@@ -6,24 +6,39 @@ from .. import db_prefix
 from .fields import EField, DField
 
 
-schema = dj.schema(db_prefix + "photonics")
+schema = dj.schema(dj.config["custom"]["database.prefix"] + "phox")
 
 
 @schema
 class Design(dj.Lookup):
     definition = """
-    design            : smallint      # design number
+    design            : varchar(6)      # design code
     ---
-    design_title      : varchar(255)
     design_description: varchar(1000)
-    design_path       : varchar(255)  # directory relative to the project root, containing the geometry files
-    geometry_file     : varchar(255)
-    center_offset     : blob          # offset from legacy implementation
-    efields           : blob          # efield selection
-    dfields           : blob          # dfield selection
     """
 
-    contents = []
+    contents = [
+        {
+            "design": "D101",
+            "design_description": "30 um separation and 75 degree rotation.",
+        },
+        {
+            "design": "D102",
+            "design_description": "60 um separation and 75 degree rotation.",
+        },
+        {
+            "design": "D103",
+            "design_description": "120 um separation and 75 degree rotation.",
+        },
+        {
+            "design": "D201",
+            "design_description": "Straight emission beams",
+        },
+        {
+            "design": "Design202",
+            "design_description": "steered efields",
+        },
+    ]
 
 
 @schema
@@ -91,7 +106,9 @@ class Geometry(dj.Imported):
             d_center_x, d_center_y, d_center_z = [
                 float(x) for x in data["center"][1:-1].split(",")
             ]
-            d_norm_x, d_norm_y, d_norm_z = [float(x) for x in data["normal"][1:-1].split(",")]
+            d_norm_x, d_norm_y, d_norm_z = [
+                float(x) for x in data["normal"][1:-1].split(",")
+            ]
             detector_entry.append(
                 dict(
                     key,
@@ -118,7 +135,9 @@ class Geometry(dj.Imported):
             e_center_x, e_center_y, e_center_z = [
                 float(x) for x in data["center"][1:-1].split(",")
             ]
-            e_norm_x, e_norm_y, e_norm_z = [float(x) for x in data["normal"][1:-1].split(",")]
+            e_norm_x, e_norm_y, e_norm_z = [
+                float(x) for x in data["normal"][1:-1].split(",")
+            ]
 
             emitter_entry.append(
                 dict(

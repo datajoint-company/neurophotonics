@@ -13,7 +13,7 @@ from .. import db_prefix
 
 from .design import Geometry
 
-schema = dj.schema(db_prefix + "photonics")
+schema = dj.schema(db_prefix + "phox")
 
 
 @schema
@@ -36,8 +36,12 @@ class Tissue(dj.Computed):
         def expand_over_shanks():
             xyz = np.hstack(
                 [
-                    (Geometry.Emitter & key).fetch("e_center_x", "e_center_y", "e_center_z"),
-                    (Geometry.Detector & key).fetch("d_center_x", "d_center_y", "d_center_z"),
+                    (Geometry.Emitter & key).fetch(
+                        "e_center_x", "e_center_y", "e_center_z"
+                    ),
+                    (Geometry.Detector & key).fetch(
+                        "d_center_x", "d_center_y", "d_center_z"
+                    ),
                 ]
             )
 
@@ -51,7 +55,9 @@ class Tissue(dj.Computed):
             points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
             for i in tqdm.tqdm(range(npoints - 1)):
                 while True:
-                    point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
+                    point = (
+                        np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
+                    )
                     if distance.cdist(points, point).min() > min_distance:
                         break
                 points = np.vstack((points, point))
@@ -154,7 +160,9 @@ class Fluorescence(dj.Computed):
 
             vxyz = np.int16(
                 np.round(
-                    (cell_xyz - e_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch
+                    (cell_xyz - e_xyz)
+                    @ np.vstack((x_basis, y_basis, z_basis)).T
+                    / pitch
                     + dims / 2
                 )
             )
@@ -166,14 +174,19 @@ class Fluorescence(dj.Computed):
                 * np.array(
                     [
                         volume[q[0], q[1], q[2]]
-                        if 0 <= q[0] < dims[0] and 0 <= q[1] < dims[1] and 0 <= q[2] < dims[2]
+                        if 0 <= q[0] < dims[0]
+                        and 0 <= q[1] < dims[1]
+                        and 0 <= q[2] < dims[2]
                         else 0
                         for q in vxyz
                     ]
                 )
             )
             entry = dict(
-                key, **emit_key, reemitted_photons=np.float32(v), photons_per_joule=v.sum()
+                key,
+                **emit_key,
+                reemitted_photons=np.float32(v),
+                photons_per_joule=v.sum()
             )
 
             Fluorescence.Emitter.insert1(entry, ignore_extra_fields=True)
@@ -265,7 +278,9 @@ class Detection(dj.Computed):
             assert abs(z_basis @ z_basis - 1) < 1e-4
             vxyz = np.int16(
                 np.round(
-                    (cell_xyz - d_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch
+                    (cell_xyz - d_xyz)
+                    @ np.vstack((x_basis, y_basis, z_basis)).T
+                    / pitch
                     + dims / 2
                 )
             )
@@ -273,13 +288,18 @@ class Detection(dj.Computed):
             v = np.array(
                 [
                     volume[q[0], q[1], q[2]]
-                    if 0 <= q[0] < dims[0] and 0 <= q[1] < dims[1] and 0 <= q[2] < dims[2]
+                    if 0 <= q[0] < dims[0]
+                    and 0 <= q[1] < dims[1]
+                    and 0 <= q[2] < dims[2]
                     else 0
                     for q in vxyz
                 ]
             )
             entry = dict(
-                key, **detect_key, detect_probabilities=np.float32(v), mean_probability=v.sum()
+                key,
+                **detect_key,
+                detect_probabilities=np.float32(v),
+                mean_probability=v.sum()
             )
             Detection.Detector.insert1(entry, ignore_extra_fields=True)
 
