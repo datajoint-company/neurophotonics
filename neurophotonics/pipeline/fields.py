@@ -30,16 +30,17 @@ class DSim(dj.Lookup):
 
     contents = [
         dict(
-            dsim=0, 
-            detector_width=10.00,   
-            detector_height=10.00,    
-            anisotropy=0.88,  
-            absorption_length=14000,   
+            dsim=0,
+            detector_width=10.00,
+            detector_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000,
             scatter_length=100,
-            volume_dimx=1000,          
-            volume_dimy=1000,         
-            volume_dimz=1000,          
-            pitch = 2.2),
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            pitch=2.2,
+        ),
     ]
 
 
@@ -61,13 +62,23 @@ class DField(dj.Computed):
             k: spec[k]
             for k in spec
             if k
-            in {"pitch", "anisotropy", "scatter_length", "absorption_length", "detector_type"}
+            in {
+                "pitch",
+                "anisotropy",
+                "scatter_length",
+                "absorption_length",
+                "detector_type",
+            }
         }
 
         kwargs.update(
             dims=tuple(spec[k] for k in ("volume_dimx", "volume_dimy", "volume_dimz")),
             emitter_spread="spherical",
-            emitter_size=(float(spec["detector_width"]), float(spec["detector_height"]), 0),
+            emitter_size=(
+                float(spec["detector_width"]),
+                float(spec["detector_height"]),
+                0,
+            ),
         )
 
         space = Space(**kwargs)
@@ -120,7 +131,7 @@ class ESim(dj.Lookup):
     contents = [
         dict(
             esim=0,
-            esim_description='Narrowed to pi/4, steer 0',
+            esim_description="Narrowed to pi/4, steer 0",
             beam_compression=0.25,
             y_steer=0.0,
             emitter_width=10.0,
@@ -132,11 +143,11 @@ class ESim(dj.Lookup):
             volume_dimy=1000,
             volume_dimz=1000,
             beam_xy_aspect=1.0,
-            pitch=2.2),
-
+            pitch=2.2,
+        ),
         dict(
             esim=1,
-            esim_description='Narrow pi/6, steer 0',
+            esim_description="Narrow pi/6, steer 0",
             beam_compression=0.167,
             y_steer=0.0,
             emitter_width=10.0,
@@ -148,13 +159,13 @@ class ESim(dj.Lookup):
             volume_dimy=1000,
             volume_dimz=1000,
             beam_xy_aspect=1.0,
-            pitch=2.2),
-
+            pitch=2.2,
+        ),
         dict(
             esim=2,
-            esim_description='Narrow to pi/4, steer 30',
+            esim_description="Narrow to pi/4, steer 30",
             beam_compression=0.25,
-            y_steer=np.pi/6,
+            y_steer=np.pi / 6,
             emitter_width=10.0,
             emitter_height=10.00,
             anisotropy=0.88,
@@ -164,13 +175,13 @@ class ESim(dj.Lookup):
             volume_dimy=1000,
             volume_dimz=1000,
             beam_xy_aspect=1.0,
-            pitch=2.2),
-
+            pitch=2.2,
+        ),
         dict(
             esim=2,
-            esim_description='Narrowed to pi/6, steer 30',
+            esim_description="Narrowed to pi/6, steer 30",
             beam_compression=0.167,
-            y_steer=np.pi/6,
+            y_steer=np.pi / 6,
             emitter_width=10.0,
             emitter_height=10.00,
             anisotropy=0.88,
@@ -180,13 +191,13 @@ class ESim(dj.Lookup):
             volume_dimy=1000,
             volume_dimz=1000,
             beam_xy_aspect=1.0,
-            pitch=2.2),
-
+            pitch=2.2,
+        ),
         dict(
             esim=2,
-            esim_description='Narrow to pi/4, steer 45',
+            esim_description="Narrow to pi/4, steer 45",
             beam_compression=0.25,
-            y_steer=np.pi/4,
+            y_steer=np.pi / 4,
             emitter_width=10.0,
             emitter_height=10.00,
             anisotropy=0.88,
@@ -196,13 +207,13 @@ class ESim(dj.Lookup):
             volume_dimy=1000,
             volume_dimz=1000,
             beam_xy_aspect=1.0,
-            pitch=2.2),
-
+            pitch=2.2,
+        ),
         dict(
             esim=2,
-            esim_description='Narrowed to pi/6, steer 45',
+            esim_description="Narrowed to pi/6, steer 45",
             beam_compression=0.167,
-            y_steer=np.pi/4,
+            y_steer=np.pi / 4,
             emitter_width=10.0,
             emitter_height=10.00,
             anisotropy=0.88,
@@ -212,7 +223,8 @@ class ESim(dj.Lookup):
             volume_dimy=1000,
             volume_dimz=1000,
             beam_xy_aspect=1.0,
-            pitch=2.2),
+            pitch=2.2,
+        ),
     ]
 
 
@@ -247,12 +259,18 @@ class EField(dj.Computed):
 
         kwargs.update(
             dims=tuple(spec[k] for k in ("volume_dimx", "volume_dimy", "volume_dimz")),
-            emitter_size=(float(spec["emitter_width"]), float(spec["emitter_height"]), 0),
+            emitter_size=(
+                float(spec["emitter_width"]),
+                float(spec["emitter_height"]),
+                0,
+            ),
         )
 
         space = Space(**kwargs)
         space.run(hops=500_000)
-        self.insert1(dict(key, volume=np.float32(space.volume), total_photons=space.total_count))
+        self.insert1(
+            dict(key, volume=np.float32(space.volume), total_photons=space.total_count)
+        )
 
     def plot(self, figsize=(8, 8), axis=None, gamma=0.7, cmap="magma", title=""):
         from matplotlib_scalebar.scalebar import ScaleBar

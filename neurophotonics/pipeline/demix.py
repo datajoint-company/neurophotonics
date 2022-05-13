@@ -42,11 +42,17 @@ class IlluminationCycle(dj.Computed):
 
     def make(self, key):
         emission = np.stack(
-            [np.float32(x) for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")]
+            [
+                np.float32(x)
+                for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")
+            ]
         )  # emitters x sources
 
         detection = np.stack(
-            [np.float32(x) for x in (Detection.Detector & key).fetch("detect_probabilities")]
+            [
+                np.float32(x)
+                for x in (Detection.Detector & key).fetch("detect_probabilities")
+            ]
         )  # detectors x sources
 
         target_rank = 140_000
@@ -129,7 +135,9 @@ class Demix(dj.Computed):
         nchannels = nframes * ndetectors
         mix = np.ndarray(dtype="float32", shape=(nchannels, ncells))
         for ichannel in range(0, nchannels, ndetectors):
-            mix[ichannel : ichannel + ndetectors] = detection * emission[ichannel // ndetectors]
+            mix[ichannel : ichannel + ndetectors] = (
+                detection * emission[ichannel // ndetectors]
+            )
 
         # normalize channels by their noise
         mean_fluorescence = 0.03
@@ -144,7 +152,9 @@ class Demix(dj.Computed):
         square = mix.T @ mix
         identity = np.identity(mix.shape[1])
         alpha = np.sqrt(
-            scipy.linalg.eigh(square, eigvals_only=True, eigvals=(ncells - 1, ncells - 1))[0]
+            scipy.linalg.eigh(
+                square, eigvals_only=True, eigvals=(ncells - 1, ncells - 1)
+            )[0]
         ) / (2 * kmax)
         square += alpha**2 * identity
 
