@@ -1,4 +1,4 @@
-ARG mode=djlab
+ARG mode=djbase
 FROM datajoint/${mode}
 
 RUN \
