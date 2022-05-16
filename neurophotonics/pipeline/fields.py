@@ -268,7 +268,11 @@ class EField(dj.Computed):
         )
 
         space = Space(**kwargs)
+<<<<<<< HEAD
         space.run(hops=1_000_000)
+=======
+        space.run(hops=500_000)
+>>>>>>> de1342dc9f4564f5561ddca4062940d4280f85c2
         self.insert1(
             dict(key, volume=np.float32(space.volume), total_photons=space.total_count)
         )
