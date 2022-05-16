@@ -1,7 +1,8 @@
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard up -d
 # WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard up --build -d
 # docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard down
+
 # Build this image from neurophotonics level on your local machine
+
 version: '2.4'
 services:
   standard_worker:
@@ -13,10 +14,9 @@ services:
     env_file: dev.env
     environment:
       - NEW_USER=datajoint
-      - DISPLAY
+      - NEW_HOME=/home/.anaconda
     user: ${HOST_UID}:anaconda
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ../setup.py:/main/setup.py
       - ../requirements.txt:/main/requirements.txt
       - ../README.md:/main/README.md
