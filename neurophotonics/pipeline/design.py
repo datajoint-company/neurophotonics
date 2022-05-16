@@ -113,18 +113,19 @@ class Geometry(dj.Computed):
         if key['design'] in {"D101", "D102", "D103", "D104"}:       # Designs 1
             
             shank_width = 120
-            shank_length = 2500
+            shank_length = 1200
             
-            angle = np.radians(75)
             separation = {"D101": 30,  "D102": 75, "D103": 120, "D104": 120}[key['design']]
             
             for shank in -1, 0, 1:
+                angle = np.radians(75) * shank
+
+                rotate = R.from_euler('z', angle)
                 translate = np.array([[
-                    (np.cos(angle) * shank_width/2 + separation) * shank,  
-                    (np.sin(angle) * shank_width/2),
+                    ((np.cos(angle) + 1) * shank_width/2 + separation) * shank,  
+                    (np.sin(angle) * shank_width/2) * shank,
                     0
                 ]])
-                rotate = R.from_euler('z', angle * shank)
                 polygon = np.float32(rotate.apply(
                     np.array(
                     [
@@ -136,11 +137,11 @@ class Geometry(dj.Computed):
                         ])) + translate)
                 self.Shank().insert1(dict(key, shank=shank, polygon=polygon))
                 
-                if shank in (-1, 1):   # place D-pixels
+                top = rotate.apply([0, 0, 1])
+                norm = rotate.apply([0, 1, 0])
 
-                    top = rotate.apply([0, 0, 1])
-                    norm = rotate.apply([0, 1, 0])
-
+                if shank in (0,):   # place D-pixels
+                  
                     # define emitter centroids
                     pixel_size = 5
                     ncolumns = 22  
@@ -178,7 +179,7 @@ class Geometry(dj.Computed):
                             width=pixel_size,
                             thick=0) for dpixel, row in enumerate(rows))
 
-                if shank == 0:   # place E-pixels
+                if shank in (-1, 1):   # place E-pixels
                     pixel_size = 10
                     ncolumns = 5
                     nrows = shank_length / pixel_size / 2
