@@ -31,8 +31,9 @@ class DSim(dj.Lookup):
     contents = [
         dict(
             dsim=0,
-            detector_width=10.00,
-            detector_height=10.00,
+            dsim_description="5x5 lambertian",
+            detector_width=5.00,
+            detector_height=5.00,
             anisotropy=0.88,
             absorption_length=14000,
             scatter_length=100,
@@ -82,7 +83,7 @@ class DField(dj.Computed):
         )
 
         space = Space(**kwargs)
-        space.run(hops=2_000_000)
+        space.run(hops=1_000_000)
         volume = space.volume * space.emitter_area
         self.insert1(
             dict(
@@ -178,7 +179,7 @@ class ESim(dj.Lookup):
             pitch=2.2,
         ),
         dict(
-            esim=2,
+            esim=3,
             esim_description="Narrowed to pi/6, steer 30",
             beam_compression=0.167,
             y_steer=np.pi / 6,
@@ -194,7 +195,7 @@ class ESim(dj.Lookup):
             pitch=2.2,
         ),
         dict(
-            esim=2,
+            esim=4,
             esim_description="Narrow to pi/4, steer 45",
             beam_compression=0.25,
             y_steer=np.pi / 4,
@@ -210,7 +211,7 @@ class ESim(dj.Lookup):
             pitch=2.2,
         ),
         dict(
-            esim=2,
+            esim=5,
             esim_description="Narrowed to pi/6, steer 45",
             beam_compression=0.167,
             y_steer=np.pi / 4,
@@ -267,7 +268,7 @@ class EField(dj.Computed):
         )
 
         space = Space(**kwargs)
-        space.run(hops=500_000)
+        space.run(hops=1_000_000)
         self.insert1(
             dict(key, volume=np.float32(space.volume), total_photons=space.total_count)
         )

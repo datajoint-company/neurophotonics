@@ -7,7 +7,7 @@ from .. import db_prefix
 from .sim import Fluorescence, Detection, Tissue
 
 
-schema = dj.schema(db_prefix + "photonics")
+schema = dj.schema(db_prefix + "phox")
 
 
 @schema
