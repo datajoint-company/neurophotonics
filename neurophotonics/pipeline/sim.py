@@ -13,6 +13,7 @@ from .design import Geometry
 
 schema = dj.schema(db_prefix + "phox")
 
+version = 102
 
 @schema
 class Tissue(dj.Computed):
@@ -78,7 +79,7 @@ class Fluorescence(dj.Computed):
         -> Geometry.EPixel
         ---
         reemitted_photons  : longblob   # photons emitted from cells per joule of illumination
-        photons_per_joule : float  # average photons from all cells
+        photons_per_joule : float  # total photons from all cells
         """
 
     def make(self, key):
@@ -91,10 +92,10 @@ class Fluorescence(dj.Computed):
         for sim_key in (ESim & (Geometry.EPixel & key)).fetch("KEY"):
 
             keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
-                Geometry.EPixel & sim_key
+                Geometry.EPixel & sim_key & key
             ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
 
-            volume, pitch, *dims = (EField * ESim & sim_key).fetch1(
+            volume, pitch, *dims = (EField * ESim & key & sim_key).fetch1(
                 "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
             )
             volume = RegularGridInterpolator(
@@ -114,11 +115,11 @@ class Fluorescence(dj.Computed):
             )  #  pixels * xyz * basis
 
             # assert orthonormality
-            assert np.all(((basis ** 2).sum(axis=1) - 1) < 1e-6)
-            assert np.all(np.abs((basis[:,:,0] * basis[:,:,1]).sum(axis=1)) < 1e-6)
-            assert np.all(np.abs((basis[:,:,1] * basis[:,:,2]).sum(axis=1)) < 1e-6)
-            assert np.all(np.abs((basis[:,:,2] * basis[:,:,0]).sum(axis=1)) < 1e-6)
-            
+            assert np.all(((basis**2).sum(axis=1) - 1) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 0] * basis[:, :, 1]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
+
             # compute the cell coordinates in each pixels coordinates
             centers = (
                 cell_xyz[:, None, :]
@@ -126,7 +127,7 @@ class Fluorescence(dj.Computed):
                 + np.array(dims) / 2
             )  # cells x pixels x ndim
 
-            # volume coordinates of all cells for all epixels 
+            # volume coordinates of all cells for all epixels
             coords = np.int16(
                 np.round(
                     np.einsum("ijk,jkn->jin", centers, basis) / pitch
@@ -135,15 +136,13 @@ class Fluorescence(dj.Computed):
             )
 
             # emitted photons per joule
-            photons = neuron_cross_section * photons_per_joule * volume(coords)
-                
-            self.EPixel().insert1(
-                dict(
-                    key,
-                    **ekey,
-                    reemitted_photons=np.float32(v),
-                    photons_per_joule=v.sum()
-                )
+            photons = np.float32(
+                neuron_cross_section * photons_per_joule * volume(coords)
+            )
+
+            self.EPixel.insert(
+                dict(key, reemitted_photons=n, photons_per_joule=n.sum())
+                for key, n in zip(keys, photons)
             )
 
 
