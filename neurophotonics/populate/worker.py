@@ -26,15 +26,25 @@ standard_worker = DataJointWorker('standard_worker',
                                   autoclear_error_patterns=autoclear_error_patterns)
 
 standard_worker(fields.EField, processes=1024)
+print("keys processed:", fields.EField.progress(display=False)[0])
 standard_worker(fields.DField, processes=1024)
+print("keys processed:", fields.DField.progress(display=False)[0])
 
 standard_worker(design.Geometry, processes=1024)
+print("keys processed:", design.Geometry.progress(display=False)[0])
 
 standard_worker(sim.Tissue, processes=1024)
+print("keys processed:", sim.Tissue.progress(display=False)[0])
 standard_worker(sim.Detection, processes=2)
+print("keys processed:", sim.Detection.progress(display=False)[0])
 standard_worker(sim.Fluorescence, processes=2)
+print("keys processed:", sim.Fluorescence.progress(display=False)[0])
 
 standard_worker(demix.IlluminationCycle, processes=2)
+print("keys processed:", demix.IlluminationCycle.progress(display=False)[0])
 standard_worker(demix.Demix, processes=1024)
+print("keys processed:", demix.Demix.progress(display=False)[0])
 standard_worker(demix.Cosine, processes=1)
+print("keys processed:", demix.Cosine.progress(display=False)[0])
 standard_worker(demix.SpikeSNR, processes=1)
+print("keys processed:", demix.SpikeSNR.progress(display=False)[0])
