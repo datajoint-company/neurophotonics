@@ -56,7 +56,7 @@ class DField(dj.Computed):
     total_photons : int unsigned
     """
 
-    def make(self, key):
+    def compute(self, key):
         spec = (DSim & key).fetch1()
 
         kwargs = {
@@ -84,12 +84,16 @@ class DField(dj.Computed):
 
         space = Space(**kwargs)
         space.run(hops=1_000_000)
-        volume = space.volume * space.emitter_area
+        space.volume *= space.emitter_area
+        return space
+
+    def make(self, key):
+        space = self.compute(key)
         self.insert1(
             dict(
                 key,
-                volume=np.float32(volume),
-                max_value=volume.max(),
+                volume=np.float32(space.volume),
+                max_value=space.volume.max(),
                 total_photons=space.total_count,
             )
         )
@@ -239,7 +243,8 @@ class EField(dj.Computed):
     total_photons : int unsigned
     """
 
-    def make(self, key):
+    def compute(self, key, hops=1_000_000):
+
         spec = (ESim & key).fetch1()
 
         # pass arguments from lookup to function
@@ -266,9 +271,12 @@ class EField(dj.Computed):
                 0,
             ),
         )
-
         space = Space(**kwargs)
-        space.run(hops=1_000_000)
+        space.run(hops=hops)
+        return space
+
+    def make(self, key):
+        space = self.compute(key)
         self.insert1(
             dict(key, volume=np.float32(space.volume), total_photons=space.total_count)
         )
