@@ -16,13 +16,6 @@ services:
       - NEW_USER=datajoint
       - NEW_HOME=/home/.anaconda
     user: ${HOST_UID}:anaconda
-    volumes:
-      - ../setup.py:/main/setup.py
-      - ../requirements.txt:/main/requirements.txt
-      - ../README.md:/main/README.md
-      - ../scripts:/main/scripts
-      - ../neurophotonics:/main/neurophotonics
-      - ../workdir:/main/workdir
     scale: ${WORKER_COUNT:-1}
     command:
       - /bin/bash
@@ -30,4 +23,5 @@ services:
       - |
         set -e
         echo "Running standard_worker..."
-        run_workflow standard_worker
+        run_workflow standard_worker || echo "docker-compose-standard_worker workflow failed"
+        echo "Finished standard_worker"
