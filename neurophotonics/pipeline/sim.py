@@ -5,9 +5,7 @@ from .design import Design, Geometry
 from .fields import ESim, DSim, EField, DField
 from scipy.spatial import distance
 from scipy.spatial.transform import Rotation as R
-from multiprocess import Pool
-from multiprocess import cpu_count
-import gc
+from scipy.interpolate import RegularGridInterpolator
 
 from .. import db_prefix
 
@@ -35,12 +33,8 @@ class Tissue(dj.Computed):
 
         xyz = np.hstack(
             [
-                (Geometry.EPixel & key).fetch(
-                    "cx", "cy", "cz"
-                ),
-                (Geometry.DPixel & key).fetch(
-                    "cx", "cy", "cz"
-                ),
+                (Geometry.EPixel & key).fetch("cx", "cy", "cz"),
+                (Geometry.DPixel & key).fetch("cx", "cy", "cz"),
             ]
         )
 
@@ -54,9 +48,7 @@ class Tissue(dj.Computed):
         points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
         for i in tqdm.tqdm(range(npoints - 1)):
             while True:
-                point = (
-                    np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-                )
+                point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
                 if distance.cdist(points, point).min() > min_distance:
                     break
             points = np.vstack((points, point))
@@ -86,7 +78,7 @@ class Fluorescence(dj.Computed):
         -> Geometry.EPixel
         ---
         reemitted_photons  : longblob   # photons emitted from cells per joule of illumination
-        photons_per_joule : float  # total photons from all cells
+        photons_per_joule : float  # average photons from all cells
         """
 
     def make(self, key):
@@ -96,46 +88,63 @@ class Fluorescence(dj.Computed):
         self.insert1(key)
 
         # iterate through each EField
-        for esim_key in (ESim & (Geometry.EPixel & key)).fetch('KEY'):
-            volume, pitch, *dims = (EField * ESim & esim_key).fetch1(
-                'volume', 'pitch', 'volume_dimx', 'volume_dimy', 'volume_dimz')
-            dims = np.array(dims)
+        for sim_key in (ESim & (Geometry.EPixel & key)).fetch("KEY"):
 
-            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (Geometry.EPixel & ekey).fetch1(
-                    'KEY', 'cx', 'cy', 'cz', 'nx', 'ny', 'nz', 'tx', 'ty', 'tz')
-            centers = np.hstack((cx, cy, cz))
-            norms = np.hstack((nx, ny, nz))
-            tops = np.hpstack((tx, ty, tz))
+            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
+                Geometry.EPixel & sim_key
+            ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
+
+            volume, pitch, *dims = (EField * ESim & sim_key).fetch1(
+                "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
+            )
+            volume = RegularGridInterpolator(
+                (np.r_[: dims[0]], np.r_[: dims[1]], np.r_[: dims[2]]),
+                volume,
+                method="nearest",
+                bounds_error=False,
+                fill_value=0,
+            )
+
+            z_basis = np.stack((nx, ny, nz)).T
+            x_basis = np.stack((tx, ty, tz)).T
+            y_basis = np.cross(z_basis, x_basis)
+
+            basis = np.stack(
+                (x_basis, y_basis, z_basis), axis=-1
+            )  #  pixels * xyz * basis
+
+            # assert orthonormality
+            assert np.all(((basis ** 2).sum(axis=1) - 1) < 1e-6)
+            assert np.all(np.abs((basis[:,:,0] * basis[:,:,1]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:,:,1] * basis[:,:,2]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:,:,2] * basis[:,:,0]).sum(axis=1)) < 1e-6)
             
-            # iterate through E-Fields
-            for ekey in tqdm.tqdm((Geometry.Emitter & key & esim_key).fetch('KEY')):
-                cx, cy, cz, nx, ny, nz, tx, ty, tz = (Geometry.EPixel & ekey).fetch1(
-                    'cx', 'cy', 'cz', 'nx', 'ny', 'nz', 'tx', 'ty', 'tz')
-                center = np.array(('cx', 'cy', 'cz'))
-                z_basis = np.array((nx, ny, nz))
-                y_basis = np.array((tx, ty, tz))
-                x_basis = np.cross(z_basis, y_basis)
-                assert abs(x_basis @ y_basis) < 1e-4
-                assert abs(x_basis @ z_basis) < 1e-4
-                assert abs(y_basis @ z_basis) < 1e-4
-                assert abs(x_basis @ x_basis - 1) < 1e-4
-                assert abs(y_basis @ y_basis - 1) < 1e-4
-                assert abs(z_basis @ z_basis - 1) < 1e-4
+            # compute the cell coordinates in each pixels coordinates
+            centers = (
+                cell_xyz[:, None, :]
+                - (np.stack((cx, cy, cz)).T)[None, :, :] / pitch
+                + np.array(dims) / 2
+            )  # cells x pixels x ndim
 
-                vcenters = np.int16(np.round(
-                    (cell_xyz - center) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch + dims/2))
+            # volume coordinates of all cells for all epixels 
+            coords = np.int16(
+                np.round(
+                    np.einsum("ijk,jkn->jin", centers, basis) / pitch
+                    + np.array(dims) / 2
+                )
+            )
 
-                # photon counts
-                v = neuron_cross_section * photons_per_joule * np.array([
-                    volume[q[0], q[1], q[2]] if 
-                    0 <= q[0] < dims[0] and 
-                    0 <= q[1] < dims[1] and 
-                    0 <= q[2] < dims[2] else 0 for q in vcenters])
-
-                self.EPixel().insert1(
-                    dict(key, **ekey, reemitted_photons=np.float32(v), photons_per_joule=v.sum()))
-
-        gc.collect()
+            # emitted photons per joule
+            photons = neuron_cross_section * photons_per_joule * volume(coords)
+                
+            self.EPixel().insert1(
+                dict(
+                    key,
+                    **ekey,
+                    reemitted_photons=np.float32(v),
+                    photons_per_joule=v.sum()
+                )
+            )
 
 
 @schema
@@ -160,11 +169,13 @@ class Detection(dj.Computed):
         volume = (DField & key).fetch1("volume")
 
         pitch, volume_dimx, volume_dimy, volume_dimz = (DSim & key).fetch1(
-            "pitch", "volume_dimx", "volume_dimy", "volume_dimz")
+            "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
+        )
 
         cx, cy, cz, nx, ny, nz, tx, ty, tz = (Geometry.DPixel & key).fetch(
-            'cx', 'cy', 'cz', 'nx', 'ny', 'nz', 'tx', 'ty', 'tz')
-        
+            "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz"
+        )
+
         dims = np.array([volume_dimx, volume_dimy, volume_dimz])
 
         # cell positions in volume coordinates
@@ -179,9 +190,7 @@ class Detection(dj.Computed):
         assert abs(z_basis @ z_basis - 1) < 1e-4
         vxyz = np.int16(
             np.round(
-                (cell_xyz - d_xyz)
-                @ np.vstack((x_basis, y_basis, z_basis)).T
-                / pitch
+                (cell_xyz - d_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch
                 + dims / 2
             )
         )
@@ -189,9 +198,7 @@ class Detection(dj.Computed):
         v = np.array(
             [
                 volume[q[0], q[1], q[2]]
-                if 0 <= q[0] < dims[0]
-                and 0 <= q[1] < dims[1]
-                and 0 <= q[2] < dims[2]
+                if 0 <= q[0] < dims[0] and 0 <= q[1] < dims[1] and 0 <= q[2] < dims[2]
                 else 0
                 for q in vxyz
             ]
