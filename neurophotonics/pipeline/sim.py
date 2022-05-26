@@ -13,8 +13,6 @@ from .design import Geometry
 
 schema = dj.schema(db_prefix + "phox")
 
-version = 104
-
 
 @schema
 class Tissue(dj.Computed):
@@ -197,24 +195,29 @@ class Detection(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            # compute the cell coordinates in each pixels coordinates
-            centers = (
-                cell_xyz[:, None, :]
-                - (np.stack((cx, cy, cz)).T)[None, :, :] / pitch
-                + np.array(dims) / 2
-            )  # cells x pixels x ndim
+            # compute the cell coordinates in each pixel's coordinates
+            chunk = 1000
+            for i in range(0, len(keys), chunk):
+                ix = slice(i, i + chunk)
 
-            # volume coordinates of all cells for all epixels
-            coords = (
-                np.einsum("ijk,jkn->jin", centers, basis) / pitch + np.array(dims) / 2
-            )
-            probabilities = volume(coords)
+                centers = (
+                    cell_xyz[:, None, :]
+                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :] / pitch
+                    + np.array(dims) / 2
+                )  # cells x pixels x ndim
 
-            self.DPixel.insert(
-                dict(
-                    key,
-                    detect_probabilities=probability,
-                    mean_probability=probability.mean(),
+                # volume coordinates of all cells for all epixels
+                coords = (
+                    np.einsum("ijk,jkn->jin", centers, basis[ix]) / pitch
+                    + np.array(dims) / 2
                 )
-                for key, probability in zip(keys, probabilities)
-            )
+                probabilities = volume(coords)
+
+                self.DPixel.insert(
+                    dict(
+                        key,
+                        detect_probabilities=probability,
+                        mean_probability=probability.mean(),
+                    )
+                    for key, probability in zip(keys[ix], probabilities)
+                )
