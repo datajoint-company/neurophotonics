@@ -195,11 +195,10 @@ class Detection(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            # compute the cell coordinates in each pixel's coordinates
-            chunk = 1000
+            chunk = 2000
             for i in range(0, len(keys), chunk):
                 ix = slice(i, i + chunk)
-
+                # compute the cell position in each pixel's coordinates
                 centers = (
                     cell_xyz[:, None, :]
                     - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :] / pitch
