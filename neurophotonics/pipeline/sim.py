@@ -13,7 +13,8 @@ from .design import Geometry
 
 schema = dj.schema(db_prefix + "phox")
 
-version = 102
+version = 104
+
 
 @schema
 class Tissue(dj.Computed):
@@ -46,6 +47,7 @@ class Tissue(dj.Computed):
         volume = (bounds_max - bounds_min).prod() * 1e-9  # 1e-9 is for um3 -> mm3
         npoints = int(volume * density + 0.5)
 
+        # add one point at a time checking that it is not too close to existing points
         points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
         for i in tqdm.tqdm(range(npoints - 1)):
             while True:
@@ -91,10 +93,6 @@ class Fluorescence(dj.Computed):
         # iterate through each EField
         for sim_key in (ESim & (Geometry.EPixel & key)).fetch("KEY"):
 
-            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
-                Geometry.EPixel & sim_key & key
-            ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
-
             volume, pitch, *dims = (EField * ESim & key & sim_key).fetch1(
                 "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
             )
@@ -105,6 +103,10 @@ class Fluorescence(dj.Computed):
                 bounds_error=False,
                 fill_value=0,
             )
+
+            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
+                Geometry.EPixel & sim_key & key
+            ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
 
             z_basis = np.stack((nx, ny, nz)).T
             x_basis = np.stack((tx, ty, tz)).T
@@ -128,11 +130,8 @@ class Fluorescence(dj.Computed):
             )  # cells x pixels x ndim
 
             # volume coordinates of all cells for all epixels
-            coords = np.int16(
-                np.round(
-                    np.einsum("ijk,jkn->jin", centers, basis) / pitch
-                    + np.array(dims) / 2
-                )
+            coords = (
+                np.einsum("ijk,jkn->jin", centers, basis) / pitch + np.array(dims) / 2
             )
 
             # emitted photons per joule
@@ -165,57 +164,57 @@ class Detection(dj.Computed):
     def make(self, key):
         cell_xyz = (Tissue & key).fetch1("cell_xyz")
         self.insert1(key)
-        volume = (DField & key).fetch1("volume")
 
-        pitch, volume_dimx, volume_dimy, volume_dimz = (DSim & key).fetch1(
-            "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
-        )
+        for sim_key in (DSim & (Geometry.DPixel & key)).fetch("KEY"):
 
-        cx, cy, cz, nx, ny, nz, tx, ty, tz = (Geometry.DPixel & key).fetch(
-            "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz"
-        )
-
-        dims = np.array([volume_dimx, volume_dimy, volume_dimz])
-
-        # cell positions in volume coordinates
-        z_basis = np.array([d_norm_x, d_norm_y, d_norm_z])
-        y_basis = np.array([d_top_x, d_top_y, d_top_z])
-        x_basis = np.cross(z_basis, y_basis)
-        assert abs(x_basis @ y_basis) < 1e-4
-        assert abs(x_basis @ z_basis) < 1e-4
-        assert abs(y_basis @ z_basis) < 1e-4
-        assert abs(x_basis @ x_basis - 1) < 1e-4
-        assert abs(y_basis @ y_basis - 1) < 1e-4
-        assert abs(z_basis @ z_basis - 1) < 1e-4
-        vxyz = np.int16(
-            np.round(
-                (cell_xyz - d_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch
-                + dims / 2
+            volume, pitch, *dims = (DField * DSim & key & sim_key).fetch1(
+                "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
             )
-        )
-        # photon counts
-        v = np.array(
-            [
-                volume[q[0], q[1], q[2]]
-                if 0 <= q[0] < dims[0] and 0 <= q[1] < dims[1] and 0 <= q[2] < dims[2]
-                else 0
-                for q in vxyz
-            ]
-        )
-        entry = dict(
-            key,
-            **detect_key,
-            detect_probabilities=np.float32(v),
-            mean_probability=v.sum()
-        )
-        Detection.DPixel.insert1(entry, ignore_extra_fields=True)
 
-        try:
-            with Pool(cpu_count()) as p:
-                p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
-        except Exception as e:
-            print(e)
-            with dj.config(safemode=False):
-                (self & key).delete()
+            volume = RegularGridInterpolator(
+                (np.r_[: dims[0]], np.r_[: dims[1]], np.r_[: dims[2]]),
+                volume,
+                method="nearest",
+                bounds_error=False,
+                fill_value=0,
+            )
 
-        gc.collect()
+            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
+                Geometry.DPixel & sim_key & key
+            ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
+
+            z_basis = np.stack((nx, ny, nz)).T
+            x_basis = np.stack((tx, ty, tz)).T
+            y_basis = np.cross(z_basis, x_basis)
+
+            basis = np.stack(
+                (x_basis, y_basis, z_basis), axis=-1
+            )  #  pixels * xyz * basis
+
+            # assert orthonormality
+            assert np.all(((basis**2).sum(axis=1) - 1) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 0] * basis[:, :, 1]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
+
+            # compute the cell coordinates in each pixels coordinates
+            centers = (
+                cell_xyz[:, None, :]
+                - (np.stack((cx, cy, cz)).T)[None, :, :] / pitch
+                + np.array(dims) / 2
+            )  # cells x pixels x ndim
+
+            # volume coordinates of all cells for all epixels
+            coords = (
+                np.einsum("ijk,jkn->jin", centers, basis) / pitch + np.array(dims) / 2
+            )
+            probabilities = volume(coords)
+
+            self.DPixel.insert(
+                dict(
+                    key,
+                    detect_probabilities=probability,
+                    mean_probability=probability.mean(),
+                )
+                for key, probability in zip(keys, probabilities)
+            )
