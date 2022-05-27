@@ -42,20 +42,14 @@ class IlluminationCycle(dj.Computed):
 
     def make(self, key):
         emission = np.stack(
-            [
-                np.float32(x)
-                for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")
-            ]
+            (Fluorescence.EPixel & key).fetch("reemitted_photons")
         )  # emitters x sources
-
         detection = np.stack(
-            [
-                np.float32(x)
-                for x in (Detection.Detector & key).fetch("detect_probabilities")
-            ]
+            (Detection.DPixel & key).fetch("detect_probabilities")
         )  # detectors x sources
 
-        target_rank = 140_000
+        volume = (Tissue & key).fetch1("volume")
+        target_rank = 150_000 * volume  # rule of thumb
 
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
         nframes = int(np.ceil(target_rank / detection.shape[0]))
@@ -96,14 +90,13 @@ class Demix(dj.Computed):
         dt = 0.02  # (s) sample duration (one illumination cycle)
         power = 0.04  # Total milliwatts to the brain
         dark_noise = 300  # counts per second
-        seed = 0
 
         # load the emission and detection matrices
         npoints, volume = (Tissue & key).fetch1("npoints", "volume")
         target_density = (Sample & key).fetch1("density")
 
         selection = np.r_[:npoints] < int(np.round(target_density) * volume)
-        np.random.seed(seed)
+        np.random.seed(0)
         np.random.shuffle(selection)
 
         illumination = (IlluminationCycle & key).fetch1("illumination")
@@ -113,18 +106,13 @@ class Demix(dj.Computed):
         )  # watts averaged over the entire cycle
         avg = nframes * illumination[illumination > 0].mean()
 
-        emission = np.stack(
-            [
-                np.float32(x[selection])
-                for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")
-            ]
-        )  # emitters x sources
+        emission = np.stack((Fluorescence.EPixel & key).fetch("reemitted_photons"))[:, selection]  # emitters x sources
         emission = dt * illumination @ emission  # photons per frame
 
         detection = np.stack(
             [
                 np.float32(x[selection])
-                for x in (Detection.Detector & key).fetch("detect_probabilities")
+                for x in (Detection.DPixel & key).fetch("detect_probabilities")
             ]
         )  # detectors x sources
 

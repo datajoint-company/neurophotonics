@@ -97,8 +97,9 @@ class Geometry(dj.Computed):
         shank_width = 120
         shank_length = 1200
 
-        separation = {"D101": 30, "D102": 75, "D103": 120, "D104": 120}[key["design"]]
-        esim = dict(D101=0, D102=0, D103=0, D104=1)[key["design"]]
+        separation, esim = dict(
+            D101=(30, 0), D102=(75, 0), D103=(120, 0), D104=(120, 1)
+        )[key["design"]]
 
         for shank in -1, 0, 1:
             angle = np.radians(75) * shank
@@ -295,7 +296,7 @@ class Geometry(dj.Computed):
 
 def make_grid(row, column):
     """
-    make a grid of centroids 
+    make a grid of centroids
     """
     return np.array(
         [
