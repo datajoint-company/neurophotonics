@@ -48,11 +48,10 @@ class IlluminationCycle(dj.Computed):
             (Detection.DPixel & key).fetch("detect_probabilities")
         )  # detectors x sources
 
-        volume = (Tissue & key).fetch1("volume")
-        target_rank = 150_000 * volume  # rule of thumb
-
+        volume = (Tissue & key).fetch1('volume')
+        target_rank = 150_000 * volume  # rule of thumb 
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
-        nframes = int(np.ceil(target_rank / detection.shape[0]))
+        nframes = max(4, int(np.ceil(target_rank / detection.shape[0])))
 
         qq = emission @ detection.T
         qq = qq @ qq.T
@@ -106,15 +105,10 @@ class Demix(dj.Computed):
         )  # watts averaged over the entire cycle
         avg = nframes * illumination[illumination > 0].mean()
 
+        detection = np.stack((Detection.DPixel & key).fetch("detect_probabilities"))[:, selection]  # detectors x sources
         emission = np.stack((Fluorescence.EPixel & key).fetch("reemitted_photons"))[:, selection]  # emitters x sources
         emission = dt * illumination @ emission  # photons per frame
 
-        detection = np.stack(
-            [
-                np.float32(x[selection])
-                for x in (Detection.DPixel & key).fetch("detect_probabilities")
-            ]
-        )  # detectors x sources
 
         # construct the mixing matrix mix: nchannels x ncells
         # mix = number of photons from neuron per frame at full fluorescence
