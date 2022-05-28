@@ -83,7 +83,7 @@ class Fluorescence(dj.Computed):
         """
 
     def make(self, key):
-        neuron_cross_section = 1e-4  # um^2
+        neuron_cross_section = 0.1  # um^2
         photons_per_joule = 1 / (2.8 * 1.6e-19)  # 2.8 eV blue photons
         cell_xyz = (Tissue & key).fetch1("cell_xyz")
         self.insert1(key)
