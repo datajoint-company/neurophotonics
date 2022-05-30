@@ -242,20 +242,25 @@ class Geometry(dj.Computed):
             nrows = shank_length / pixel_size / 2
             centers = self._make_epixels(nrows, ncolumns)
             centers = rotate.apply(centers * pixel_size) + translate
+            checkerboard = self._make_checkerboard(nrows, ncolumns)
+            if shank >= 2:  # two side shanks angled only one way
+                checkerboard = np.ones_like(checkerboard)
+            tops = checkerboard[:, None] * top
+
             self.EPixel.insert(
                 dict(
                     key,
                     shank=shank,
                     epixel=epixel,
                     esim=esim,
-                    **dict(zip(("tx", "ty", "tz"), top)),
+                    **dict(zip(("tx", "ty", "tz"), _top)),
                     **dict(zip(("nx", "ny", "nz"), norm)),
                     **dict(zip(("cx", "cy", "cz"), center)),
                     height=pixel_size,
                     width=pixel_size,
                     thick=0
                 )
-                for epixel, center in enumerate(centers)
+                for epixel, (center, _top) in enumerate(zip(centers, tops))
             )
 
     @staticmethod
@@ -263,6 +268,15 @@ class Geometry(dj.Computed):
         return make_grid(
             np.r_[-ncolumns / 2 + 0.5 : ncolumns / 2], np.r_[:nrows] * 2 + 1
         )
+
+    @staticmethod
+    def _make_checkerboard(nrows, ncolumns):
+        return (
+            np.array(
+                [g.flatten() for g in np.meshgrid(np.r_[:nrows], np.r_[:ncolumns])]
+            ).sum(axis=0)
+            % 2
+        ) * 2 - 1
 
     @staticmethod
     def _make_dpixels(nrows, ncolumns):
