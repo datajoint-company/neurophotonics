@@ -120,27 +120,31 @@ class Fluorescence(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            # compute the cell coordinates in each pixels coordinates
-            centers = (
-                cell_xyz[:, None, :]
-                - (np.stack((cx, cy, cz)).T)[None, :, :] / pitch
-                + np.array(dims) / 2
-            )  # cells x pixels x ndim
+            chunk = 2000
+            for i in range(0, len(keys), chunk):
+                ix = slice(i, i + chunk)
 
-            # volume coordinates of all cells for all epixels
-            coords = (
-                np.einsum("ijk,jkn->jin", centers, basis) / pitch + np.array(dims) / 2
-            )
+                # compute the cell coordinates in each pixels coordinates
+                centers = (
+                    cell_xyz[:, None, :]
+                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :] / pitch
+                    + np.array(dims) / 2
+                )  # cells x pixels x ndim
 
-            # emitted photons per joule
-            photons = np.float32(
-                neuron_cross_section * photons_per_joule * volume(coords)
-            )
+                # volume coordinates of all cells for all epixels
+                coords = (
+                    np.einsum("ijk,jkn->jin", centers, basis[ix]) / pitch + np.array(dims) / 2
+                )
 
-            self.EPixel.insert(
-                dict(key, reemitted_photons=n, photons_per_joule=n.sum())
-                for key, n in zip(keys, photons)
-            )
+                # emitted photons per joule
+                photons = np.float32(
+                    neuron_cross_section * photons_per_joule * volume(coords)
+                )
+
+                self.EPixel.insert(
+                    dict(key, reemitted_photons=n, photons_per_joule=n.sum())
+                    for key, n in zip(keys[ix], photons)
+                )
 
 
 @schema
