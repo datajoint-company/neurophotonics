@@ -124,20 +124,21 @@ class Fluorescence(dj.Computed):
             for i in range(0, len(keys), chunk):
                 ix = slice(i, i + chunk)
 
-                # compute the cell coordinates in each pixels coordinates
-                centers = (
-                    cell_xyz[:, None, :]
-                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :]
-                )  # cells x pixels x ndim
-                coords = (
-                    np.einsum("ijk,jkn->jin", centers, basis[ix]) / pitch
-                    + np.array(dims) / 2
-                )  # pixels x cells x ndim
+                coords = (  # coordinates of cells in each pixels' coordinates
+                    np.einsum(
+                        "ijk,jkn->jin",
+                        cell_xyz[:, None, :]
+                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                        basis[ix],
+                    )
+                    / pitch
+                    + np.array / 2
+                )
 
                 # emitted photons per joule
                 photons = np.float32(
                     neuron_cross_section * photons_per_joule * volume(coords)
-                )   # pixels x cells
+                )  # pixels x cells
 
                 self.EPixel.insert(
                     dict(key, reemitted_photons=n, photons_per_joule=n.sum())
@@ -200,16 +201,16 @@ class Detection(dj.Computed):
             chunk = 2000
             for i in range(0, len(keys), chunk):
                 ix = slice(i, i + chunk)
-                # compute the cell position in each pixel's coordinates
-                centers = (
-                    cell_xyz[:, None, :]
-                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :]
-                )  # cells x pixels x ndim
 
-                # volume coordinates of all cells for all epixels
-                coords = (
-                    np.einsum("ijk,jkn->jin", centers, basis[ix]) / pitch
-                    + np.array(dims) / 2
+                coords = (  # coordinates of cells in each pixels' coordinates
+                    np.einsum(
+                        "ijk,jkn->jin",
+                        cell_xyz[:, None, :]
+                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                        basis[ix],
+                    )
+                    / pitch
+                    + np.array / 2
                 )
                 probabilities = volume(coords)
 

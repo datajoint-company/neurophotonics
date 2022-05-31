@@ -136,10 +136,11 @@ class Geometry(dj.Computed):
 
             if shank in (0,):  # place D-pixels
                 pixel_size = 5
+                pixel_spacing = 5
                 ncolumns = 22
-                nrows = shank_length / pixel_size  # number of rows
+                nrows = shank_length / pixel_spacing  # number of rows
                 centers = self._make_dpixels(nrows, ncolumns)
-                centers = rotate.apply(centers * pixel_size) + translate
+                centers = rotate.apply(centers * pixel_spacing) + translate
                 self.DPixel.insert(
                     dict(
                         key,
