@@ -127,19 +127,17 @@ class Fluorescence(dj.Computed):
                 # compute the cell coordinates in each pixels coordinates
                 centers = (
                     cell_xyz[:, None, :]
-                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :] / pitch
-                    + np.array(dims) / 2
+                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :]
                 )  # cells x pixels x ndim
-
-                # volume coordinates of all cells for all epixels
                 coords = (
-                    np.einsum("ijk,jkn->jin", centers, basis[ix]) / pitch + np.array(dims) / 2
-                )
+                    np.einsum("ijk,jkn->jin", centers, basis[ix]) / pitch
+                    + np.array(dims) / 2
+                )  # pixels x cells x ndim
 
                 # emitted photons per joule
                 photons = np.float32(
                     neuron_cross_section * photons_per_joule * volume(coords)
-                )
+                )   # pixels x cells
 
                 self.EPixel.insert(
                     dict(key, reemitted_photons=n, photons_per_joule=n.sum())
@@ -205,8 +203,7 @@ class Detection(dj.Computed):
                 # compute the cell position in each pixel's coordinates
                 centers = (
                     cell_xyz[:, None, :]
-                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :] / pitch
-                    + np.array(dims) / 2
+                    - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :]
                 )  # cells x pixels x ndim
 
                 # volume coordinates of all cells for all epixels

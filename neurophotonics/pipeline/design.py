@@ -158,10 +158,11 @@ class Geometry(dj.Computed):
 
             if shank in (-1, 1):  # place E-pixels
                 pixel_size = 10
+                pixel_spacing = 20
                 ncolumns = 5
-                nrows = shank_length / pixel_size / 2
+                nrows = shank_length / pixel_spacing
                 centers = self._make_epixels(nrows, ncolumns)
-                centers = rotate.apply(centers * pixel_size) + translate
+                centers = rotate.apply(centers * pixel_spacing) + translate
                 self.EPixel.insert(
                     dict(
                         key,
@@ -219,7 +220,7 @@ class Geometry(dj.Computed):
             ncolumns = 22
             nrows = shank_length / pixel_size  # number of rows
             centers = self._make_dpixels(nrows, ncolumns)
-            centers = rotate.apply(centers * pixel_size) + translate
+            centers = rotate.apply(centers * pixel_size ) + translate
             self.DPixel.insert(
                 dict(
                     key,
@@ -238,10 +239,11 @@ class Geometry(dj.Computed):
 
             # E-Pixels
             pixel_size = 10
+            pixel_spacing = 20
             ncolumns = 5
-            nrows = shank_length / pixel_size / 2
+            nrows = shank_length / pixel_spacing
             centers = self._make_epixels(nrows, ncolumns)
-            centers = rotate.apply(centers * pixel_size) + translate
+            centers = rotate.apply(centers * pixel_spacing) + translate
             checkerboard = self._make_checkerboard(nrows, ncolumns)
             if shank >= 2:  # two side shanks angled only one way
                 checkerboard = np.ones_like(checkerboard)
