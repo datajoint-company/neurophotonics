@@ -7,7 +7,7 @@ from .. import db_prefix
 from .sim import Fluorescence, Detection, Tissue
 
 
-schema = dj.schema(db_prefix + "photonics")
+schema = dj.schema(db_prefix + "phox")
 
 
 @schema
@@ -42,23 +42,22 @@ class IlluminationCycle(dj.Computed):
 
     def make(self, key):
         emission = np.stack(
-            [np.float32(x) for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")]
+            (Fluorescence.EPixel & key).fetch("reemitted_photons")
         )  # emitters x sources
-
         detection = np.stack(
-            [np.float32(x) for x in (Detection.Detector & key).fetch("detect_probabilities")]
+            (Detection.DPixel & key).fetch("detect_probabilities")
         )  # detectors x sources
 
-        target_rank = 140_000
-
+        volume = (Tissue & key).fetch1("volume")
+        target_rank = 150_000 * volume  # rule of thumb
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
-        nframes = int(np.ceil(target_rank / detection.shape[0]))
+        nframes = max(2, int(np.ceil(target_rank / detection.shape[0])))
 
         qq = emission @ detection.T
         qq = qq @ qq.T
 
         # combine illumination patterns with minimum overlap
-        for _ in tqdm.tqdm(range(illumination.shape[0] - nframes)):
+        for _ in tqdm.tqdm(range(len(illumination) - nframes)):
             i, j = np.triu_indices(qq.shape[1], 1)
             ix = np.argmin(qq[i, j])
             i, j = i[ix], j[ix]
@@ -83,44 +82,39 @@ class Demix(dj.Computed):
     demix_norm        : longblob  # cell's demixing vector norm
     bias_norm         : longblob  # cell's bias vector norm
     trans_bias_norm   : longblob  # don't use. Saved just in case of wrong axis choice
-    avg_emitter_power : float     # (uW) when on
+    total_power  : float # (uW) average
+    emitter_power : float # (uW) power when on
     """
 
     def make(self, key):
         dt = 0.02  # (s) sample duration (one illumination cycle)
-        power = 0.04  # Total milliwatts to the brain
+        total_power_limit = 0.04  # Max watts to the brain
+        max_emitter_power = 1e-4  # 100 uW
         dark_noise = 300  # counts per second
-        seed = 0
 
         # load the emission and detection matrices
         npoints, volume = (Tissue & key).fetch1("npoints", "volume")
         target_density = (Sample & key).fetch1("density")
 
         selection = np.r_[:npoints] < int(np.round(target_density) * volume)
-        np.random.seed(seed)
+        np.random.seed(0)
         np.random.shuffle(selection)
 
         illumination = (IlluminationCycle & key).fetch1("illumination")
-        nframes = illumination.shape[0]
-        illumination = (
-            power * illumination / illumination.sum()
-        )  # watts averaged over the entire cycle
-        avg = nframes * illumination[illumination > 0].mean()
+        nframes = len(illumination)
 
-        emission = np.stack(
-            [
-                np.float32(x[selection])
-                for x in (Fluorescence.Emitter & key).fetch("reemitted_photons")
-            ]
-        )  # emitters x sources
-        emission = dt * illumination @ emission  # photons per frame
+        emitter_power = min(
+            max_emitter_power, total_power_limit * nframes / illumination.sum()
+        )
+        total_power = emitter_power * illumination.sum() / nframes
 
-        detection = np.stack(
-            [
-                np.float32(x[selection])
-                for x in (Detection.Detector & key).fetch("detect_probabilities")
-            ]
-        )  # detectors x sources
+        detection = np.stack((Detection.DPixel & key).fetch("detect_probabilities"))[
+            :, selection
+        ]  # detectors x sources
+        emission = np.stack((Fluorescence.EPixel & key).fetch("reemitted_photons"))[
+            :, selection
+        ]  # emitters x sources
+        emission = emitter_power * dt * illumination @ emission  # photons per frame
 
         # construct the mixing matrix mix: nchannels x ncells
         # mix = number of photons from neuron per frame at full fluorescence
@@ -129,7 +123,9 @@ class Demix(dj.Computed):
         nchannels = nframes * ndetectors
         mix = np.ndarray(dtype="float32", shape=(nchannels, ncells))
         for ichannel in range(0, nchannels, ndetectors):
-            mix[ichannel : ichannel + ndetectors] = detection * emission[ichannel // ndetectors]
+            mix[ichannel : ichannel + ndetectors] = (
+                detection * emission[ichannel // ndetectors]
+            )
 
         # normalize channels by their noise
         mean_fluorescence = 0.03
@@ -144,7 +140,9 @@ class Demix(dj.Computed):
         square = mix.T @ mix
         identity = np.identity(mix.shape[1])
         alpha = np.sqrt(
-            scipy.linalg.eigh(square, eigvals_only=True, eigvals=(ncells - 1, ncells - 1))[0]
+            scipy.linalg.eigh(
+                square, eigvals_only=True, eigvals=(ncells - 1, ncells - 1)
+            )[0]
         ) / (2 * kmax)
         square += alpha**2 * identity
 
@@ -158,7 +156,8 @@ class Demix(dj.Computed):
             dict(
                 key,
                 selection=selection,
-                avg_emitter_power=avg * 1e6,
+                total_power=total_power * 1e6,
+                emitter_power=emitter_power * 1e6,
                 mix_norm=np.linalg.norm(mix, axis=0),
                 demix_norm=np.linalg.norm(demix, axis=1),
                 bias_norm=np.linalg.norm(bias, axis=1),
@@ -197,9 +196,9 @@ class SpikeSNR(dj.Computed):
         delta = 0.3 * 0.4
         tau = 1.0
         dt = 0.02  # must match the one in Demix
-        demix_norm, bias = (Demix & key).fetch1("demix_norm", "bias_norm")
+        demix_norm, bias_norm = (Demix & key).fetch1("demix_norm", "bias_norm")
         rho = np.exp(
             -2 * np.r_[0 : 6 * tau : dt] / tau
         ).sum()  # SNR improvement by matched filter
-        snr = (bias < max_bias) * rho * delta / demix_norm
+        snr = (bias_norm < max_bias) * rho * delta / (demix_norm + (bias_norm >= max_bias))
         self.insert1(dict(key, snr=snr))

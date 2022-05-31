@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from .. import db_prefix
 
 
-schema = dj.schema(db_prefix + "photonics")
+schema = dj.schema(db_prefix + "phox")
 
 
 @schema
@@ -28,7 +28,21 @@ class DSim(dj.Lookup):
     pitch = 2.2                 : float        # (um)  spatial sampling period of the model volume
     """
 
-    contents = []
+    contents = [
+        dict(
+            dsim=0,
+            dsim_description="5x5 lambertian",
+            detector_width=5.00,
+            detector_height=5.00,
+            anisotropy=0.88,
+            absorption_length=14000,
+            scatter_length=100,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            pitch=2.2,
+        ),
+    ]
 
 
 @schema
@@ -42,7 +56,7 @@ class DField(dj.Computed):
     total_photons : int unsigned
     """
 
-    def make(self, key):
+    def compute(self, key):
         spec = (DSim & key).fetch1()
 
         kwargs = {
@@ -69,13 +83,17 @@ class DField(dj.Computed):
         )
 
         space = Space(**kwargs)
-        space.run(hops=500_000)
-        volume = space.volume * space.emitter_area
+        space.run(hops=1_000_000)
+        space.volume *= space.emitter_area
+        return space
+
+    def make(self, key):
+        space = self.compute(key)
         self.insert1(
             dict(
                 key,
-                volume=np.float32(volume),
-                max_value=volume.max(),
+                volume=np.float32(space.volume),
+                max_value=space.volume.max(),
                 total_photons=space.total_count,
             )
         )
@@ -115,7 +133,104 @@ class ESim(dj.Lookup):
     pitch = 2.2               : float         # (um) spatial sampling period of the model volume
     """
 
-    contents = []
+    contents = [
+        dict(
+            esim=0,
+            esim_description="Narrowed to pi/4, steer 0",
+            beam_compression=0.25,
+            y_steer=0.0,
+            emitter_width=10.0,
+            emitter_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000.0,
+            scatter_length=100.0,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            beam_xy_aspect=1.0,
+            pitch=2.2,
+        ),
+        dict(
+            esim=1,
+            esim_description="Narrow pi/6, steer 0",
+            beam_compression=0.167,
+            y_steer=0.0,
+            emitter_width=10.0,
+            emitter_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000.0,
+            scatter_length=100.0,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            beam_xy_aspect=1.0,
+            pitch=2.2,
+        ),
+        dict(
+            esim=2,
+            esim_description="Narrow to pi/4, steer 30",
+            beam_compression=0.25,
+            y_steer=np.pi / 6,
+            emitter_width=10.0,
+            emitter_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000.0,
+            scatter_length=100.0,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            beam_xy_aspect=1.0,
+            pitch=2.2,
+        ),
+        dict(
+            esim=3,
+            esim_description="Narrowed to pi/6, steer 30",
+            beam_compression=0.167,
+            y_steer=np.pi / 6,
+            emitter_width=10.0,
+            emitter_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000.0,
+            scatter_length=100.0,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            beam_xy_aspect=1.0,
+            pitch=2.2,
+        ),
+        dict(
+            esim=4,
+            esim_description="Narrow to pi/4, steer 45",
+            beam_compression=0.25,
+            y_steer=np.pi / 4,
+            emitter_width=10.0,
+            emitter_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000.0,
+            scatter_length=100.0,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            beam_xy_aspect=1.0,
+            pitch=2.2,
+        ),
+        dict(
+            esim=5,
+            esim_description="Narrowed to pi/6, steer 45",
+            beam_compression=0.167,
+            y_steer=np.pi / 4,
+            emitter_width=10.0,
+            emitter_height=10.00,
+            anisotropy=0.88,
+            absorption_length=14000.0,
+            scatter_length=100.0,
+            volume_dimx=1000,
+            volume_dimy=1000,
+            volume_dimz=1000,
+            beam_xy_aspect=1.0,
+            pitch=2.2,
+        ),
+    ]
 
 
 @schema
@@ -128,7 +243,8 @@ class EField(dj.Computed):
     total_photons : int unsigned
     """
 
-    def make(self, key):
+    def compute(self, key, hops=1_000_000):
+
         spec = (ESim & key).fetch1()
 
         # pass arguments from lookup to function
@@ -155,9 +271,12 @@ class EField(dj.Computed):
                 0,
             ),
         )
-
         space = Space(**kwargs)
-        space.run(hops=500_000)
+        space.run(hops=hops)
+        return space
+
+    def make(self, key):
+        space = self.compute(key)
         self.insert1(
             dict(key, volume=np.float32(space.volume), total_photons=space.total_count)
         )
@@ -174,20 +293,3 @@ class EField(dj.Computed):
         axis.add_artist(scale_bar)
         title = f"{title}\n{info['total_photons'] / 1e6:0.2f} million simulated photons"
         axis.set_title(title)
-
-
-# @schema
-# class Efield2dimage(dj.Computed):
-#     definition = """
-#     # Emission field images in 2D.
-#     -> Esim
-#     pov: smallint  # point of view direction (compression direction)
-#     ---
-#     projected_image: blob@photonics
-#     """
-
-#     def make(self, key):
-#         volume = (EField & key).fetch1("volume")  # There will be only 1 volume per key.
-
-#         for pov in [0, 1, 2]:
-#             self.insert1(dict(key, pov=pov, projected_image=volume.sum(axis=pov)))

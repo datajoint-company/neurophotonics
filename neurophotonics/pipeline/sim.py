@@ -5,15 +5,13 @@ from .design import Design, Geometry
 from .fields import ESim, DSim, EField, DField
 from scipy.spatial import distance
 from scipy.spatial.transform import Rotation as R
-from multiprocess import Pool
-from multiprocess import cpu_count
-import gc
+from scipy.interpolate import RegularGridInterpolator
 
 from .. import db_prefix
 
 from .design import Geometry
 
-schema = dj.schema(db_prefix + "photonics")
+schema = dj.schema(db_prefix + "phox")
 
 
 @schema
@@ -33,32 +31,28 @@ class Tissue(dj.Computed):
         density = 120000
         min_distance = 8.0
 
-        def expand_over_shanks():
-            xyz = np.hstack(
-                [
-                    (Geometry.Emitter & key).fetch("e_center_x", "e_center_y", "e_center_z"),
-                    (Geometry.Detector & key).fetch("d_center_x", "d_center_y", "d_center_z"),
-                ]
-            )
+        xyz = np.hstack(
+            [
+                (Geometry.EPixel & key).fetch("cx", "cy", "cz"),
+                (Geometry.DPixel & key).fetch("cx", "cy", "cz"),
+            ]
+        )
 
-            margin = 50
-            bounds_min = xyz.min(axis=-1) - margin
-            bounds_max = xyz.max(axis=-1) + margin
+        margin = 50
+        bounds_min = xyz.min(axis=-1) - margin
+        bounds_max = xyz.max(axis=-1) + margin
 
-            volume = (bounds_max - bounds_min).prod() * 1e-9  # 1e-9 is for um3 -> mm3
-            npoints = int(volume * density + 0.5)
+        volume = (bounds_max - bounds_min).prod() * 1e-9  # 1e-9 is for um3 -> mm3
+        npoints = int(volume * density + 0.5)
 
-            points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-            for i in tqdm.tqdm(range(npoints - 1)):
-                while True:
-                    point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-                    if distance.cdist(points, point).min() > min_distance:
-                        break
-                points = np.vstack((points, point))
-
-            return volume, margin, npoints, points
-
-        volume, margin, npoints, points = expand_over_shanks()
+        # add one point at a time checking that it is not too close to existing points
+        points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
+        for i in tqdm.tqdm(range(npoints - 1)):
+            while True:
+                point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
+                if distance.cdist(points, point).min() > min_distance:
+                    break
+            points = np.vstack((points, point))
 
         self.insert1(
             dict(
@@ -78,115 +72,78 @@ class Fluorescence(dj.Computed):
     -> Tissue
     """
 
-    class Emitter(dj.Part):
+    class EPixel(dj.Part):
         definition = """
         # Fluorescence produced by cells per Joule of illumination
         -> master
-        -> Geometry.Emitter
+        -> Geometry.EPixel
         ---
         reemitted_photons  : longblob   # photons emitted from cells per joule of illumination
         photons_per_joule : float  # total photons from all cells
         """
 
     def make(self, key):
-        self.connection.cancel_transaction()
+        neuron_cross_section = 0.1  # um^2
+        photons_per_joule = 1 / (2.8 * 1.6e-19)  # 2.8 eV blue photons
         cell_xyz = (Tissue & key).fetch1("cell_xyz")
         self.insert1(key)
 
-        neuron_cross_section = 1e-4  # um^2
-        photons_per_joule = 1 / (2.8 * 1.6e-19)  # 2.8 eV blue photons
+        # iterate through each EField
+        for sim_key in (ESim & (Geometry.EPixel & key)).fetch("KEY"):
 
-        volume = (EField * ESim & key).fetch1("volume")
-        # just in case. Max detection should already be ~0.5. Update after additional sim verifications
-        volume = 0.5 * volume / volume.max()
+            volume, pitch, *dims = (EField * ESim & key & sim_key).fetch1(
+                "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
+            )
+            volume = RegularGridInterpolator(
+                (np.r_[: dims[0]], np.r_[: dims[1]], np.r_[: dims[2]]),
+                volume,
+                method="nearest",
+                bounds_error=False,
+                fill_value=0,
+            )
 
-        input_pars = list(
-            zip(
-                *(EField * ESim * Geometry.Emitter & key).fetch(
-                    "KEY",
-                    "pitch",
-                    "volume_dimx",
-                    "volume_dimy",
-                    "volume_dimz",
-                    "e_center_x",
-                    "e_center_y",
-                    "e_center_z",
-                    "e_norm_x",
-                    "e_norm_y",
-                    "e_norm_z",
-                    "e_top_x",
-                    "e_top_y",
-                    "e_top_z",
+            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
+                Geometry.EPixel & sim_key & key
+            ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
+
+            z_basis = np.stack((nx, ny, nz)).T
+            x_basis = np.stack((tx, ty, tz)).T
+            y_basis = np.cross(z_basis, x_basis)
+
+            basis = np.stack(
+                (x_basis, y_basis, z_basis), axis=-1
+            )  #  pixels * xyz * basis
+
+            # assert orthonormality
+            assert np.all(((basis**2).sum(axis=1) - 1) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 0] * basis[:, :, 1]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
+
+            chunk = 2000
+            for i in range(0, len(keys), chunk):
+                ix = slice(i, i + chunk)
+
+                coords = (  # coordinates of cells in each pixels' coordinates
+                    np.einsum(
+                        "ijk,jkn->jin",
+                        cell_xyz[:, None, :]
+                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                        basis[ix],
+                    )
+                    / pitch
+                    + np.array / 2
                 )
-            )
-        )
 
-        def calculate(
-            emit_key,
-            pitch,
-            volume_dimx,
-            volume_dimy,
-            volume_dimz,
-            e_center_x,
-            e_center_y,
-            e_center_z,
-            e_norm_x,
-            e_norm_y,
-            e_norm_z,
-            e_top_x,
-            e_top_y,
-            e_top_z,
-        ):
+                # emitted photons per joule
+                photons = np.float32(
+                    neuron_cross_section * photons_per_joule * volume(coords)
+                )  # pixels x cells
 
-            dims = np.array([volume_dimx, volume_dimy, volume_dimz])
-
-            # cell positions in volume coordinates
-            e_xyz = e_center_x, e_center_y, e_center_z
-            z_basis = np.array([e_norm_x, e_norm_y, e_norm_z])
-            y_basis = np.array([e_top_x, e_top_y, e_top_z])
-            x_basis = np.cross(z_basis, y_basis)
-            assert abs(x_basis @ y_basis) < 1e-4
-            assert abs(x_basis @ z_basis) < 1e-4
-            assert abs(y_basis @ z_basis) < 1e-4
-            assert abs(x_basis @ x_basis - 1) < 1e-4
-            assert abs(y_basis @ y_basis - 1) < 1e-4
-            assert abs(z_basis @ z_basis - 1) < 1e-4
-
-            vxyz = np.int16(
-                np.round(
-                    (cell_xyz - e_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch
-                    + dims / 2
+                self.EPixel.insert(
+                    dict(key, reemitted_photons=n, photons_per_joule=n.sum())
+                    for key, n in zip(keys[ix], photons)
                 )
-            )
-
-            # photon counts
-            v = (
-                neuron_cross_section
-                * photons_per_joule
-                * np.array(
-                    [
-                        volume[q[0], q[1], q[2]]
-                        if 0 <= q[0] < dims[0] and 0 <= q[1] < dims[1] and 0 <= q[2] < dims[2]
-                        else 0
-                        for q in vxyz
-                    ]
-                )
-            )
-            entry = dict(
-                key, **emit_key, reemitted_photons=np.float32(v), photons_per_joule=v.sum()
-            )
-
-            Fluorescence.Emitter.insert1(entry, ignore_extra_fields=True)
-
-        try:
-            with Pool(cpu_count()) as p:
-                p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
-        except Exception as e:
-            print(e)
-            with dj.config(safemode=False):
-                (self & key).delete()
-
-        gc.collect()
 
 
 @schema
@@ -195,100 +152,73 @@ class Detection(dj.Computed):
     -> Tissue
     """
 
-    class Detector(dj.Part):
+    class DPixel(dj.Part):
         definition = """
         # Fraction of photons detected from each cell per detector
         -> master
-        -> Geometry.Detector
+        -> Geometry.DPixel
         ---
         detect_probabilities  : longblob   # fraction of photons detected from each neuron
         mean_probability : float  # mean probability of detection across all neurons
         """
 
     def make(self, key):
-        self.connection.cancel_transaction()
         cell_xyz = (Tissue & key).fetch1("cell_xyz")
         self.insert1(key)
-        volume = (DField * DSim & key).fetch1("volume")
-        # just in case. Max detection should already be ~0.5. Update after additional sim verifications
-        volume = 0.5 * volume / volume.max()
 
-        input_pars = list(
-            zip(
-                *(DField * DSim * Geometry.Detector & key).fetch(
-                    "KEY",
-                    "pitch",
-                    "volume_dimx",
-                    "volume_dimy",
-                    "volume_dimz",
-                    "d_center_x",
-                    "d_center_y",
-                    "d_center_z",
-                    "d_norm_x",
-                    "d_norm_y",
-                    "d_norm_z",
-                    "d_top_x",
-                    "d_top_y",
-                    "d_top_z",
+        for sim_key in (DSim & (Geometry.DPixel & key)).fetch("KEY"):
+
+            volume, pitch, *dims = (DField * DSim & key & sim_key).fetch1(
+                "volume", "pitch", "volume_dimx", "volume_dimy", "volume_dimz"
+            )
+
+            volume = RegularGridInterpolator(
+                (np.r_[: dims[0]], np.r_[: dims[1]], np.r_[: dims[2]]),
+                volume,
+                method="nearest",
+                bounds_error=False,
+                fill_value=0,
+            )
+
+            keys, cx, cy, cz, nx, ny, nz, tx, ty, tz = (
+                Geometry.DPixel & sim_key & key
+            ).fetch("KEY", "cx", "cy", "cz", "nx", "ny", "nz", "tx", "ty", "tz")
+
+            z_basis = np.stack((nx, ny, nz)).T
+            x_basis = np.stack((tx, ty, tz)).T
+            y_basis = np.cross(z_basis, x_basis)
+
+            basis = np.stack(
+                (x_basis, y_basis, z_basis), axis=-1
+            )  #  pixels * xyz * basis
+
+            # assert orthonormality
+            assert np.all(((basis**2).sum(axis=1) - 1) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 0] * basis[:, :, 1]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
+            assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
+
+            chunk = 2000
+            for i in range(0, len(keys), chunk):
+                ix = slice(i, i + chunk)
+
+                coords = (  # coordinates of cells in each pixels' coordinates
+                    np.einsum(
+                        "ijk,jkn->jin",
+                        cell_xyz[:, None, :]
+                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                        basis[ix],
+                    )
+                    / pitch
+                    + np.array / 2
                 )
-            )
-        )
+                probabilities = volume(coords)
 
-        def calculate(
-            detect_key,
-            pitch,
-            volume_dimx,
-            volume_dimy,
-            volume_dimz,
-            d_center_x,
-            d_center_y,
-            d_center_z,
-            d_norm_x,
-            d_norm_y,
-            d_norm_z,
-            d_top_x,
-            d_top_y,
-            d_top_z,
-        ):
-            dims = np.array([volume_dimx, volume_dimy, volume_dimz])
-
-            # cell positions in volume coordinates
-            d_xyz = d_center_x, d_center_y, d_center_z
-            z_basis = np.array([d_norm_x, d_norm_y, d_norm_z])
-            y_basis = np.array([d_top_x, d_top_y, d_top_z])
-            x_basis = np.cross(z_basis, y_basis)
-            assert abs(x_basis @ y_basis) < 1e-4
-            assert abs(x_basis @ z_basis) < 1e-4
-            assert abs(y_basis @ z_basis) < 1e-4
-            assert abs(x_basis @ x_basis - 1) < 1e-4
-            assert abs(y_basis @ y_basis - 1) < 1e-4
-            assert abs(z_basis @ z_basis - 1) < 1e-4
-            vxyz = np.int16(
-                np.round(
-                    (cell_xyz - d_xyz) @ np.vstack((x_basis, y_basis, z_basis)).T / pitch
-                    + dims / 2
+                self.DPixel.insert(
+                    dict(
+                        key,
+                        detect_probabilities=probability,
+                        mean_probability=probability.mean(),
+                    )
+                    for key, probability in zip(keys[ix], probabilities)
                 )
-            )
-            # photon counts
-            v = np.array(
-                [
-                    volume[q[0], q[1], q[2]]
-                    if 0 <= q[0] < dims[0] and 0 <= q[1] < dims[1] and 0 <= q[2] < dims[2]
-                    else 0
-                    for q in vxyz
-                ]
-            )
-            entry = dict(
-                key, **detect_key, detect_probabilities=np.float32(v), mean_probability=v.sum()
-            )
-            Detection.Detector.insert1(entry, ignore_extra_fields=True)
-
-        try:
-            with Pool(cpu_count()) as p:
-                p.starmap(calculate, tqdm.tqdm(input_pars, total=len(input_pars)))
-        except Exception as e:
-            print(e)
-            with dj.config(safemode=False):
-                (self & key).delete()
-
-        gc.collect()
