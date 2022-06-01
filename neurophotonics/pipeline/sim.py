@@ -132,7 +132,7 @@ class Fluorescence(dj.Computed):
                         basis[ix],
                     )
                     / pitch
-                    + np.array / 2
+                    + np.array(dims) / 2
                 )
 
                 # emitted photons per joule
@@ -198,7 +198,7 @@ class Detection(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            chunk = 2000
+            chunk = 1000
             for i in range(0, len(keys), chunk):
                 ix = slice(i, i + chunk)
 
@@ -210,7 +210,7 @@ class Detection(dj.Computed):
                         basis[ix],
                     )
                     / pitch
-                    + np.array / 2
+                    + np.array(dims) / 2
                 )
                 probabilities = volume(coords)
 
