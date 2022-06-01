@@ -1,12 +1,5 @@
-from neurophotonics.pipeline.sim import Tissue, Fluorescence, Detection
+from neurophotonics.pipeline import sim
 
-Tissue.populate(reserve_jobs=True, display_progress=False, processes=1024)
-Detection.populate(reserve_jobs=True, display_progress=False, processes=2)
-Fluorescence.populate(reserve_jobs=True, display_progress=False, processes=2)
-
-print(
-    "keys processed:",
-    Tissue.progress(display=False)[0]
-    + Detection.progress(display=False)[0]
-    + Fluorescence.progress(display=False)[0],
-)
+sim.Tissue.populate(reserve_jobs=True)
+sim.Detection.populate(reserve_jobs=True)
+sim.Fluorescence.populate(reserve_jobs=True)

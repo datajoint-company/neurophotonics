@@ -1,9 +1,3 @@
-from neurophotonics.design import Geometry
+from neurophotonics import design.Geometry
 
-Geometry.populate(reserve_jobs=True, display_progress=False, processes=1024)
-
-
-print(
-    "keys processed:",
-    Geometry.progress(display=False)[0],
-)
+Geometry.populate(reserve_jobs=True, display_progress=True)
