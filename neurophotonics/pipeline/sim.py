@@ -46,9 +46,8 @@ class Tissue(dj.Computed):
         npoints = int(volume * density + 0.5)
 
         # add one point at a time checking that it is not too close to existing points
-        with tqdm.tqdm(total=npoints) as pbar:
-            points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-            pbar.update(1)
+        points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
+        with tqdm.tqdm(total=npoints - 1) as pbar:
             while len(points) <= npoints - 1:
                 point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
                 if distance.cdist(points, point).min() > min_distance:
