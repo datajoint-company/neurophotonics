@@ -122,7 +122,7 @@ class Fluorescence(dj.Computed):
 
             chunk = 1000
             with tqdm.tqdm(
-                desc=f"Fluorescence: {sim_key}", total=len(keys)
+                desc=f"EPixels for {sim_key}", total=len(keys)
             ) as progress_bar:
                 for i in range(0, len(keys), chunk):
                     ix = slice(i, i + chunk)
@@ -201,7 +201,7 @@ class Detection(dj.Computed):
 
             chunk = 1000
             with tqdm.tqdm(
-                desc=f"Detection: {sim_key}", total=len(keys)
+                desc=f"DPixels for {sim_key}", total=len(keys)
             ) as progress_bar:
                 for i in range(0, len(keys), chunk):
                     ix = slice(i, i + chunk)
@@ -225,4 +225,4 @@ class Detection(dj.Computed):
                         )
                         for key, probability in zip(keys[ix], probabilities)
                     )
-                progress_bar.update(chunk)
+                    progress_bar.update(chunk)
