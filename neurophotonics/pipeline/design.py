@@ -269,7 +269,7 @@ class Geometry(dj.Computed):
     @staticmethod
     def _make_epixels(nrows, ncolumns):
         return make_grid(
-            np.r_[-ncolumns / 2 + 0.5 : ncolumns / 2], np.r_[:nrows] * 2 + 1
+            np.r_[-ncolumns / 2 + 0.5 : ncolumns / 2], np.r_[0.5:nrows]
         )
 
     @staticmethod
