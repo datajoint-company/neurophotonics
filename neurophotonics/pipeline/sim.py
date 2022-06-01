@@ -52,7 +52,7 @@ class Tissue(dj.Computed):
                 point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
                 if distance.cdist(points, point).min() > min_distance:
                     points = np.vstack((points, point))
-                pbar.update(1)
+                    pbar.update(1)
 
         self.insert1(
             dict(
