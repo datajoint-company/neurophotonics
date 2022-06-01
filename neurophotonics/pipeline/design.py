@@ -246,7 +246,7 @@ class Geometry(dj.Computed):
             centers = self._make_epixels(nrows, ncolumns)
             centers = rotate.apply(centers * pixel_spacing) + translate
             checkerboard = self._make_checkerboard(nrows, ncolumns)
-            if shank >= 2:  # two side shanks angled only one way
+            if shank < 2:  # two side shanks angled only one way
                 checkerboard = np.ones_like(checkerboard)
             tops = checkerboard[:, None] * top
 

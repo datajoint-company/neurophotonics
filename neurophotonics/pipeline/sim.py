@@ -47,7 +47,7 @@ class Tissue(dj.Computed):
 
         # add one point at a time checking that it is not too close to existing points
         points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-        for i in tqdm.tqdm(range(npoints - 1)):
+        for i in tqdm.tqdm(range(npoints - 1), mininterval=2.0):
             while True:
                 point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
                 if distance.cdist(points, point).min() > min_distance:
@@ -85,7 +85,7 @@ class Fluorescence(dj.Computed):
     def make(self, key):
         neuron_cross_section = 0.1  # um^2
         photons_per_joule = 1 / (2.8 * 1.6e-19)  # 2.8 eV blue photons
-        cell_xyz = (Tissue & key).fetch1("cell_xyz")
+        cell_xyz = (Tissue & key).fetch1("cell_xyz")[:, None, :]
         self.insert1(key)
 
         # iterate through each EField
@@ -120,30 +120,31 @@ class Fluorescence(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            chunk = 2000
-            for i in range(0, len(keys), chunk):
-                ix = slice(i, i + chunk)
-
-                coords = (  # coordinates of cells in each pixels' coordinates
-                    np.einsum(
-                        "ijk,jkn->jin",
-                        cell_xyz[:, None, :]
-                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
-                        basis[ix],
+            chunk = 1000
+            with tqdm.tqdm(
+                desc=f"EPixels for {sim_key}", total=len(keys)
+            ) as progress_bar:
+                for i in range(0, len(keys), chunk):
+                    ix = slice(i, i + chunk)
+                    coords = (  # coordinates of cells in each pixels' coordinates
+                        np.einsum(
+                            "ijk,jkn->jin",
+                            cell_xyz
+                            - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                            basis[ix],
+                        )
+                        / pitch
+                        + np.array(dims) / 2
                     )
-                    / pitch
-                    + np.array / 2
-                )
+                    photons = np.float32(  # emitted photons per joule
+                        neuron_cross_section * photons_per_joule * volume(coords)
+                    )  # pixels x cells
 
-                # emitted photons per joule
-                photons = np.float32(
-                    neuron_cross_section * photons_per_joule * volume(coords)
-                )  # pixels x cells
-
-                self.EPixel.insert(
-                    dict(key, reemitted_photons=n, photons_per_joule=n.sum())
-                    for key, n in zip(keys[ix], photons)
-                )
+                    self.EPixel.insert(
+                        dict(key, reemitted_photons=n, photons_per_joule=n.sum())
+                        for key, n in zip(keys[ix], photons)
+                    )
+                    progress_bar.update(chunk)
 
 
 @schema
@@ -163,7 +164,7 @@ class Detection(dj.Computed):
         """
 
     def make(self, key):
-        cell_xyz = (Tissue & key).fetch1("cell_xyz")
+        cell_xyz = (Tissue & key).fetch1("cell_xyz")[:, None, :]
         self.insert1(key)
 
         for sim_key in (DSim & (Geometry.DPixel & key)).fetch("KEY"):
@@ -198,27 +199,31 @@ class Detection(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            chunk = 2000
-            for i in range(0, len(keys), chunk):
-                ix = slice(i, i + chunk)
-
-                coords = (  # coordinates of cells in each pixels' coordinates
-                    np.einsum(
-                        "ijk,jkn->jin",
-                        cell_xyz[:, None, :]
-                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
-                        basis[ix],
+            chunk = 1000
+            with tqdm.tqdm(
+                desc=f"DPixels for {sim_key}",
+                total=len(keys),
+            ) as progress_bar:
+                for i in range(0, len(keys), chunk):
+                    ix = slice(i, i + chunk)
+                    coords = (  # coordinates of cells in each pixels' coordinates
+                        np.einsum(
+                            "ijk,jkn->jin",
+                            cell_xyz
+                            - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                            basis[ix],
+                        )
+                        / pitch
+                        + np.array(dims) / 2
                     )
-                    / pitch
-                    + np.array / 2
-                )
-                probabilities = volume(coords)
+                    probabilities = volume(coords)
 
-                self.DPixel.insert(
-                    dict(
-                        key,
-                        detect_probabilities=probability,
-                        mean_probability=probability.mean(),
+                    self.DPixel.insert(
+                        dict(
+                            key,
+                            detect_probabilities=probability,
+                            mean_probability=probability.mean(),
+                        )
+                        for key, probability in zip(keys[ix], probabilities)
                     )
-                    for key, probability in zip(keys[ix], probabilities)
-                )
+                    progress_bar.update(chunk)
