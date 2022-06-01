@@ -120,30 +120,31 @@ class Fluorescence(dj.Computed):
             assert np.all(np.abs((basis[:, :, 1] * basis[:, :, 2]).sum(axis=1)) < 1e-6)
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
-            chunk = 2000
-            for i in range(0, len(keys), chunk):
-                ix = slice(i, i + chunk)
-
-                coords = (  # coordinates of cells in each pixels' coordinates
-                    np.einsum(
-                        "ijk,jkn->jin",
-                        cell_xyz[:, None, :]
-                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
-                        basis[ix],
+            chunk = 1000
+            with tqdm.tqdm(
+                desc=f"Fluorescence: {sim_key}", total=len(keys)
+            ) as progress_bar:
+                for i in range(0, len(keys), chunk):
+                    ix = slice(i, i + chunk)
+                    coords = (  # coordinates of cells in each pixels' coordinates
+                        np.einsum(
+                            "ijk,jkn->jin",
+                            cell_xyz[:, None, :]
+                            - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                            basis[ix],
+                        )
+                        / pitch
+                        + np.array(dims) / 2
                     )
-                    / pitch
-                    + np.array(dims) / 2
-                )
+                    photons = np.float32(  # emitted photons per joule
+                        neuron_cross_section * photons_per_joule * volume(coords)
+                    )  # pixels x cells
 
-                # emitted photons per joule
-                photons = np.float32(
-                    neuron_cross_section * photons_per_joule * volume(coords)
-                )  # pixels x cells
-
-                self.EPixel.insert(
-                    dict(key, reemitted_photons=n, photons_per_joule=n.sum())
-                    for key, n in zip(keys[ix], photons)
-                )
+                    self.EPixel.insert(
+                        dict(key, reemitted_photons=n, photons_per_joule=n.sum())
+                        for key, n in zip(keys[ix], photons)
+                    )
+                    progress_bar.update(chunk)
 
 
 @schema
@@ -199,26 +200,29 @@ class Detection(dj.Computed):
             assert np.all(np.abs((basis[:, :, 2] * basis[:, :, 0]).sum(axis=1)) < 1e-6)
 
             chunk = 1000
-            for i in range(0, len(keys), chunk):
-                ix = slice(i, i + chunk)
-
-                coords = (  # coordinates of cells in each pixels' coordinates
-                    np.einsum(
-                        "ijk,jkn->jin",
-                        cell_xyz[:, None, :]
-                        - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
-                        basis[ix],
+            with tqdm.tqdm(
+                desc=f"Detection: {sim_key}", total=len(keys)
+            ) as progress_bar:
+                for i in range(0, len(keys), chunk):
+                    ix = slice(i, i + chunk)
+                    coords = (  # coordinates of cells in each pixels' coordinates
+                        np.einsum(
+                            "ijk,jkn->jin",
+                            cell_xyz[:, None, :]
+                            - (np.stack((cx[ix], cy[ix], cz[ix])).T)[None, :, :],
+                            basis[ix],
+                        )
+                        / pitch
+                        + np.array(dims) / 2
                     )
-                    / pitch
-                    + np.array(dims) / 2
-                )
-                probabilities = volume(coords)
+                    probabilities = volume(coords)
 
-                self.DPixel.insert(
-                    dict(
-                        key,
-                        detect_probabilities=probability,
-                        mean_probability=probability.mean(),
+                    self.DPixel.insert(
+                        dict(
+                            key,
+                            detect_probabilities=probability,
+                            mean_probability=probability.mean(),
+                        )
+                        for key, probability in zip(keys[ix], probabilities)
                     )
-                    for key, probability in zip(keys[ix], probabilities)
-                )
+                progress_bar.update(chunk)
