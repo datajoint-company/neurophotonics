@@ -47,12 +47,13 @@ class Tissue(dj.Computed):
 
         # add one point at a time checking that it is not too close to existing points
         points = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
-        for i in tqdm.tqdm(range(npoints - 1), mininterval=2.0):
-            while True:
+        
+        with tqdm.tqdm(total=npoints - 1) as pbar:
+            while len(points) <= npoints - 1:
                 point = np.random.rand(1, 3) * (bounds_max - bounds_min) + bounds_min
                 if distance.cdist(points, point).min() > min_distance:
-                    break
-            points = np.vstack((points, point))
+                    points = np.vstack((points, point))
+                    pbar.update(1)
 
         self.insert1(
             dict(
