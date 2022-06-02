@@ -91,6 +91,7 @@ class Demix(dj.Computed):
         total_power_limit = 0.04  # Max watts to the brain
         max_emitter_power = 1e-4  # 100 uW
         dark_noise = 300  # counts per second
+        detector_quantum_efficiency = 0.5
 
         # load the emission and detection matrices
         npoints, volume = (Tissue & key).fetch1("npoints", "volume")
@@ -108,9 +109,12 @@ class Demix(dj.Computed):
         )
         total_power = emitter_power * illumination.sum() / nframes
 
-        detection = np.stack((Detection.DPixel & key).fetch("detect_probabilities"))[
-            :, selection
-        ]  # detectors x sources
+        detection = (
+            detector_quantum_efficiency
+            * np.stack((Detection.DPixel & key).fetch("detect_probabilities"))[
+                :, selection
+            ]
+        )  # detectors x sources
         emission = np.stack((Fluorescence.EPixel & key).fetch("reemitted_photons"))[
             :, selection
         ]  # emitters x sources
@@ -193,12 +197,17 @@ class SpikeSNR(dj.Computed):
 
     def make(self, key):
         max_bias = 0.01
-        delta = 0.3 * 0.4
-        tau = 1.0
+        delta = 0.03 * 0.4  # mean fluorescence * dF/F
+        tau = 1.5  # calcium event time constant
         dt = 0.02  # must match the one in Demix
         demix_norm, bias_norm = (Demix & key).fetch1("demix_norm", "bias_norm")
-        rho = np.exp(
-            -2 * np.r_[0 : 6 * tau : dt] / tau
-        ).sum()  # SNR improvement by matched filter
-        snr = (bias_norm < max_bias) * rho * delta / (demix_norm + (bias_norm >= max_bias))
+        rho = np.sqrt(
+            np.exp(-2 * np.r_[0 : 6 * tau : dt] / tau).sum()
+        )  # SNR improvement by matched filter
+        snr = (
+            (bias_norm < max_bias)
+            * rho
+            * delta
+            / (demix_norm + (bias_norm >= max_bias))
+        )
         self.insert1(dict(key, snr=snr))
