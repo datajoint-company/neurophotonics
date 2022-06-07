@@ -6,8 +6,8 @@ podman-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics
 start_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
 echo "Starting run..."
-until [ "$(git rev-parse HEAD)" = "$(git ls-remote origin | grep HEAD | awk '{print $1;}')" \
-	&& $(bash check_db.sh) = '0']
+until [ "$(git rev-parse HEAD)" = "$(git ls-remote origin | grep HEAD | awk '{print $1;}')" ]\
+	&& [ $(bash check_db.sh) = '0' ]
 do
 	podman-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics_standard down
 	git pull origin master
