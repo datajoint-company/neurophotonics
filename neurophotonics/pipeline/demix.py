@@ -54,10 +54,7 @@ class IlluminationCycle(dj.Computed):
         target_rank = 150_000 * volume  # rule of thumb
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
 
-        if design in ["D205", "D206", "D207", "D208"]:
-            baseframe = 5
-        else:
-            baseframe = 2
+        baseframe = 5 if design in ["D205", "D206", "D207", "D208"] else 2
         nframes = max(baseframe, int(np.ceil(target_rank / detection.shape[0])))
 
         qq = emission @ detection.T
