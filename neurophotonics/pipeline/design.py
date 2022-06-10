@@ -26,6 +26,38 @@ class Design(dj.Lookup):
         {"design": "D202", "design_description": "Steer 45. 45-degree-beam"},
         {"design": "D203", "design_description": "Steer 0. 30-degree beam"},
         {"design": "D204", "design_description": "Steer 45. 30-degree-beam"},
+        {
+            "design": "D105",
+            "design_description": "30 um separation. 45-degree beam. 50um scattering length",
+        },
+        {
+            "design": "D106",
+            "design_description": "75 um separation. 45-degree beam. 50um scattering length",
+        },
+        {
+            "design": "D107",
+            "design_description": "120 um separation. 45-degree beam. 50um scattering length",
+        },
+        {
+            "design": "D108",
+            "design_description": "120 um separation. 30-degree beam. 50um scattering length",
+        },
+        {
+            "design": "D205",
+            "design_description": "Steer 0. 45-degree beam. 50um scattering length",
+        },
+        {
+            "design": "D206",
+            "design_description": "Steer 45. 45-degree-beam. 50um scattering length",
+        },
+        {
+            "design": "D207",
+            "design_description": "Steer 0. 30-degree beam. 50um scattering length",
+        },
+        {
+            "design": "D208",
+            "design_description": "Steer 45. 30-degree-beam. 50um scattering length",
+        },
     ]
 
 
@@ -86,9 +118,27 @@ class Geometry(dj.Computed):
     def make(self, key):
         self.insert1(key)
 
-        if key["design"] in {"D101", "D102", "D103", "D104"}:
+        if key["design"] in {
+            "D101",
+            "D102",
+            "D103",
+            "D104",
+            "D105",
+            "D106",
+            "D107",
+            "D108",
+        }:
             self._make_design1(key)
-        elif key["design"] in {"D201", "D202", "D203", "D204"}:
+        elif key["design"] in {
+            "D201",
+            "D202",
+            "D203",
+            "D204",
+            "D205",
+            "D206",
+            "D207",
+            "D208",
+        }:
             self._make_design2(key)
         else:
             raise NotImplementedError
@@ -98,7 +148,14 @@ class Geometry(dj.Computed):
         shank_length = 1200
 
         separation, esim = dict(
-            D101=(30, 0), D102=(75, 0), D103=(120, 0), D104=(120, 1)
+            D101=(30, 0),
+            D102=(75, 0),
+            D103=(120, 0),
+            D104=(120, 1),
+            D105=(30, 6),
+            D106=(75, 6),
+            D107=(120, 6),
+            D108=(120, 7),
         )[key["design"]]
 
         for shank in -1, 0, 1:
@@ -194,7 +251,9 @@ class Geometry(dj.Computed):
                 np.array([(shank // 2 * 2 - 4.5) * spacing, -separation / 2, 0])
             )
 
-            esim = dict(D201=0, D202=4, D203=1, D204=5)[key["design"]]
+            esim = dict(
+                D201=0, D202=4, D203=1, D204=5, D205=6, D206=10, D207=7, D208=11
+            )[key["design"]]
 
             polygon = np.float32(
                 rotate.apply(
@@ -221,7 +280,7 @@ class Geometry(dj.Computed):
             ncolumns = 22
             nrows = shank_length / pixel_size  # number of rows
             centers = self._make_dpixels(nrows, ncolumns)
-            centers = rotate.apply(centers * pixel_size ) + translate
+            centers = rotate.apply(centers * pixel_size) + translate
             self.DPixel.insert(
                 dict(
                     key,
@@ -268,9 +327,7 @@ class Geometry(dj.Computed):
 
     @staticmethod
     def _make_epixels(nrows, ncolumns):
-        return make_grid(
-            np.r_[-ncolumns / 2 + 0.5 : ncolumns / 2], np.r_[0.5:nrows]
-        )
+        return make_grid(np.r_[-ncolumns / 2 + 0.5 : ncolumns / 2], np.r_[0.5:nrows])
 
     @staticmethod
     def _make_checkerboard(nrows, ncolumns):
