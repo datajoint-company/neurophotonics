@@ -54,7 +54,7 @@ class IlluminationCycle(dj.Computed):
         target_rank = 150_000 * volume  # rule of thumb
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
 
-        if design in ["D201", "D205", "D206", "D207", "D208"]:
+        if design in ["D205", "D206", "D207", "D208"]:
             baseframe = 5
         else:
             baseframe = 2
