@@ -49,7 +49,7 @@ class DSim(dj.Lookup):
             detector_height=5.00,
             anisotropy=0.88,
             absorption_length=15000,
-            scatter_length=100,
+            scatter_length=50,
             volume_dimx=1000,
             volume_dimy=1000,
             volume_dimz=1000,
