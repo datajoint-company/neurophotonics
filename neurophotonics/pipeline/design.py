@@ -29,35 +29,35 @@ class Design(dj.Lookup):
         {"design": "D204", "design_description": "Steer 45. 30-degree-beam"},
         {
             "design": "D105",
-            "design_description": "30 um separation. 45-degree beam. 15000 absorption length",
+            "design_description": "30 um separation. 45-degree beam. 50um scattering length",
         },
         {
             "design": "D106",
-            "design_description": "75 um separation. 45-degree beam. 15000 absorption length",
+            "design_description": "75 um separation. 45-degree beam. 50um scattering length",
         },
         {
             "design": "D107",
-            "design_description": "120 um separation. 45-degree beam. 15000 absorption length",
+            "design_description": "120 um separation. 45-degree beam. 50um scattering length",
         },
         {
             "design": "D108",
-            "design_description": "120 um separation. 30-degree beam. 15000 absorption length",
+            "design_description": "120 um separation. 30-degree beam. 50um scattering length",
         },
         {
             "design": "D205",
-            "design_description": "Steer 0. 45-degree beam. 15000 absorption length",
+            "design_description": "Steer 0. 45-degree beam. 50um scattering length",
         },
         {
             "design": "D206",
-            "design_description": "Steer 45. 45-degree-beam. 15000 absorption length",
+            "design_description": "Steer 45. 45-degree-beam. 50um scattering length",
         },
         {
             "design": "D207",
-            "design_description": "Steer 0. 30-degree beam. 15000 absorption length",
+            "design_description": "Steer 0. 30-degree beam. 50um scattering length",
         },
         {
             "design": "D208",
-            "design_description": "Steer 45. 30-degree-beam. 15000 absorption length",
+            "design_description": "Steer 45. 30-degree-beam. 50um scattering length",
         },
     ]
 
