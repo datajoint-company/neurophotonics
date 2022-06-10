@@ -35,7 +35,6 @@ class IlluminationCycle(dj.Computed):
     definition = """
     -> Fluorescence
     -> Detection
-    pattern: tinyint
     ---
     nframes  :  smallint unsigned  # number of illumination frames
     illumination : longblob        # frames x emitters
