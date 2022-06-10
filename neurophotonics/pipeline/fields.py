@@ -300,7 +300,7 @@ class ESim(dj.Lookup):
             emitter_height=10.00,
             anisotropy=0.88,
             absorption_length=15000.0,
-            scatter_length=100.0,
+            scatter_length=50.0,
             volume_dimx=1000,
             volume_dimy=1000,
             volume_dimz=1000,
