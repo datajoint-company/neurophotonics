@@ -35,6 +35,7 @@ class IlluminationCycle(dj.Computed):
     definition = """
     -> Fluorescence
     -> Detection
+    pattern: tinyint
     ---
     nframes  :  smallint unsigned  # number of illumination frames
     illumination : longblob        # frames x emitters
@@ -48,10 +49,17 @@ class IlluminationCycle(dj.Computed):
             (Detection.DPixel & key).fetch("detect_probabilities")
         )  # detectors x sources
 
+        design = (IlluminationCycle & key).fetch1("design")
+
         volume = (Tissue & key).fetch1("volume")
         target_rank = 150_000 * volume  # rule of thumb
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
-        nframes = max(2, int(np.ceil(target_rank / detection.shape[0])))
+
+        if design in ["D201", "D205", "D206", "D207", "D208"]:
+            baseframe = 5
+        else:
+            baseframe = 2
+        nframes = max(baseframe, int(np.ceil(target_rank / detection.shape[0])))
 
         qq = emission @ detection.T
         qq = qq @ qq.T
@@ -77,21 +85,22 @@ class Demix(dj.Computed):
     -> IlluminationCycle
     -> Sample
     ---
-    selection         : longblob  # selected cells
-    mix_norm          : longblob  # cell's mixing vector norm
-    demix_norm        : longblob  # cell's demixing vector norm
-    bias_norm         : longblob  # cell's bias vector norm
-    trans_bias_norm   : longblob  # don't use. Saved just in case of wrong axis choice
-    total_power  : float # (uW) average
-    emitter_power : float # (uW) power when on
+    selection                 : longblob  # selected cells
+    mix_norm                  : longblob  # cell's mixing vector norm
+    demix_norm                : longblob  # cell's demixing vector norm
+    bias_norm                 : longblob  # cell's bias vector norm
+    trans_bias_norm           : longblob  # don't use. Saved just in case of wrong axis choice
+    total_power               : float # (uW) average
+    emitter_power             : float # (uW) power when on
+    detection_efficiency=Null : float
     """
 
     def make(self, key):
         dt = 0.02  # (s) sample duration (one illumination cycle)
         total_power_limit = 0.04  # Max watts to the brain
         max_emitter_power = 1e-4  # 100 uW
-        dark_noise = 300  # counts per second
-        detector_quantum_efficiency = 0.5
+        dark_noise = 25  # counts per second
+        detector_quantum_efficiency = 0.2
 
         # load the emission and detection matrices
         npoints, volume = (Tissue & key).fetch1("npoints", "volume")
@@ -166,6 +175,7 @@ class Demix(dj.Computed):
                 demix_norm=np.linalg.norm(demix, axis=1),
                 bias_norm=np.linalg.norm(bias, axis=1),
                 trans_bias_norm=np.linalg.norm(bias, axis=0),
+                detector_quantum_efficiency=detector_quantum_efficiency,
             )
         )
 
