@@ -48,13 +48,11 @@ class IlluminationCycle(dj.Computed):
             (Detection.DPixel & key).fetch("detect_probabilities")
         )  # detectors x sources
 
-        design = (IlluminationCycle & key).fetch1("design")
-
         volume = (Tissue & key).fetch1("volume")
         target_rank = 150_000 * volume  # rule of thumb
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
 
-        baseframe = 5 if design in ["D205", "D206", "D207", "D208"] else 2
+        baseframe = 5 if key["design"] in ["D205", "D206", "D207", "D208"] else 2
         nframes = max(baseframe, int(np.ceil(target_rank / detection.shape[0])))
 
         qq = emission @ detection.T
