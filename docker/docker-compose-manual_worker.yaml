@@ -1,11 +1,12 @@
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics_standard up --build -d
-# docker-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics_standard down
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-manual_worker -p neurophotonics_standard up --build -d
+# docker exec -it neurophotonics_standard_manual_worker_1 bash
+# docker-compose -f ./docker/docker-compose-manual_worker.yaml -p neurophotonics_standard down
 
 # Build this image from neurophotonics level on your local machine
 
 version: '2.4'
 services:
-  standard_worker:
+  manual_worker:
     build:
       # only necessary if rebuilding image
       context: ../
@@ -23,5 +24,5 @@ services:
       - |
         set -e
         echo "Running standard_worker..."
-        run_workflow standard_worker || echo "docker-compose-standard_worker workflow failed"
+        tail -f /dev/null
         echo "Finished standard_worker"
