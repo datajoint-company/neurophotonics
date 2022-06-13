@@ -1,5 +1,5 @@
-# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard up --build -d
-# docker-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard down
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics_standard up --build -d
+# docker-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics_standard down
 
 # Build this image from neurophotonics level on your local machine
 
