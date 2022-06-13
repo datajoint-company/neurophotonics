@@ -44,7 +44,7 @@ print("keys processed:", sim.Fluorescence.progress(display=False)[0])
 
 standard_worker(demix.IlluminationCycle, processes=6)
 print("keys processed:", demix.IlluminationCycle.progress(display=False)[0])
-standard_worker(demix.Demix, processes=6)
+standard_worker(demix.Demix, processes=4)
 print("keys processed:", demix.Demix.progress(display=False)[0])
 standard_worker(demix.Cosine, processes=1)
 print("keys processed:", demix.Cosine.progress(display=False)[0])
