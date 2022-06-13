@@ -86,13 +86,14 @@ class Demix(dj.Computed):
     trans_bias_norm           : longblob  # don't use. Saved just in case of wrong axis choice
     total_power               : float # (uW) average
     emitter_power             : float # (uW) power when on
+    detector_quantum_efficiency=1: float
     """
 
     def make(self, key):
         dt = 0.02  # (s) sample duration (one illumination cycle)
         total_power_limit = 0.04  # Max watts to the brain
         max_emitter_power = 1e-4  # 100 uW
-        dark_noise = 25  # counts per second
+        dark_noise = 100  # counts per second
         detector_quantum_efficiency = 0.2
 
         # load the emission and detection matrices
@@ -168,6 +169,7 @@ class Demix(dj.Computed):
                 demix_norm=np.linalg.norm(demix, axis=1),
                 bias_norm=np.linalg.norm(bias, axis=1),
                 trans_bias_norm=np.linalg.norm(bias, axis=0),
+                detector_quantum_efficiency=detector_quantum_efficiency,
             )
         )
 
