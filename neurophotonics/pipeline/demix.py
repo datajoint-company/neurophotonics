@@ -86,7 +86,7 @@ class Demix(dj.Computed):
     trans_bias_norm           : longblob  # don't use. Saved just in case of wrong axis choice
     total_power               : float # (uW) average
     emitter_power             : float # (uW) power when on
-    detector_quantum_efficiency=1.0: float
+    detector_quantum_efficiency=Null: float
     """
 
     def make(self, key):
