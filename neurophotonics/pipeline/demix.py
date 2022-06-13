@@ -94,7 +94,7 @@ class Demix(dj.Computed):
         total_power_limit = 0.04  # Max watts to the brain
         max_emitter_power = 1e-4  # 100 uW
         dark_noise = 100  # counts per second
-        detector_quantum_efficiency = 0.2
+        detector_quantum_efficiency = 0.3
 
         # load the emission and detection matrices
         npoints, volume = (Tissue & key).fetch1("npoints", "volume")
