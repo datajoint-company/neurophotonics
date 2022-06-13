@@ -2,6 +2,7 @@
 
 echo "Setting up..."
 git checkout master
+WORKER_COUNT=1 HOST_UID=$(id -u) podman-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard down
 podman system reset -f
 start_time=$(date +"%Y-%m-%d_%H:%M:%S")
 
@@ -12,6 +13,7 @@ do
 	echo "Additional work detected"
 	echo
 	echo "Restarting workflow..."
+	WORKER_COUNT=1 HOST_UID=$(id -u) podman-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard down
 	podman system reset -f
 	git pull origin master
 	WORKER_COUNT=1 HOST_UID=$(id -u) podman-compose -f ./docker/docker-compose_standard_worker.yaml -p neurophotonics_standard up --build >> log_${start_time}.txt 2>&1
@@ -29,6 +31,7 @@ do
 	echo
 	echo "Ending run..."
 	git checkout master
+	WORKER_COUNT=1 HOST_UID=$(id -u) podman-compose -f ./docker/docker-compose-standard_worker.yaml -p neurophotonics_standard down
 	podman system reset -f
 
 	echo
