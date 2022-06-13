@@ -1,0 +1,28 @@
+# WORKER_COUNT=1 HOST_UID=$(id -u) docker-compose -f ./docker/docker-compose-manual_worker -p neurophotonics_standard up --build -d
+# docker exec -it neurophotonics_standard_manual_worker_1 bash
+# docker-compose -f ./docker/docker-compose-manual_worker.yaml -p neurophotonics_standard down
+
+# Build this image from neurophotonics level on your local machine
+
+version: '2.4'
+services:
+  manual_worker:
+    build:
+      # only necessary if rebuilding image
+      context: ../
+      dockerfile: ./docker/standard_worker.Dockerfile
+    image: registry.vathes.com/sciops/neurophotonics:v0.0.1
+    env_file: dev.env
+    environment:
+      - NEW_USER=datajoint
+      - NEW_HOME=/home/.anaconda
+    user: ${HOST_UID}:anaconda
+    scale: ${WORKER_COUNT:-1}
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        echo "Running standard_worker..."
+        tail -f /dev/null
+        echo "Finished standard_worker"
