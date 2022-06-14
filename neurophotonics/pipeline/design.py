@@ -64,7 +64,7 @@ class Design(dj.Lookup):
         },
         {
             "design": "D230",
-            "design_description": "Steer 45 randomized directions. 45-degree-beam. 50um scattering length",
+            "design_description": "Steer 30 randomized directions. 30-degree-beam. 50um scattering length",
         },
     ]
 
