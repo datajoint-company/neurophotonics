@@ -62,6 +62,10 @@ class Design(dj.Lookup):
             "design": "D220",
             "design_description": "Steer 45 randomized directions. 45-degree-beam. 50um scattering length",
         },
+        {
+            "design": "D230",
+            "design_description": "Steer 45 randomized directions. 45-degree-beam. 50um scattering length",
+        },
     ]
 
 
@@ -145,6 +149,7 @@ class Geometry(dj.Computed):
             "D207",
             "D208",
             "D220",
+            "D230",
         }:
             self._make_design2(key)
         else:
@@ -248,7 +253,7 @@ class Geometry(dj.Computed):
         shank_width = 150
         shank_length = 1200
         separation = 150
-        spacing = 150
+        spacing = 260 if key["design"] == "D230" else 150
 
         for shank in range(10):
             flip = shank % 2  # rotate around the global orgin
@@ -268,6 +273,7 @@ class Geometry(dj.Computed):
                 D207=7,
                 D208=11,
                 D220=11,
+                D230=9,
             )[key["design"]]
 
             polygon = np.float32(
@@ -319,7 +325,7 @@ class Geometry(dj.Computed):
             nrows = int(shank_length / pixel_spacing)
             centers = self._make_epixels(nrows, ncolumns)
             centers = rotate.apply(centers * pixel_spacing) + translate
-            if key["design"] != "D220":
+            if key["design"] not in ["D220", "D230"]:
                 checkerboard = self._make_checkerboard(nrows, ncolumns)
                 if shank < 2:  # two side shanks angled only one way
                     checkerboard = np.ones_like(checkerboard)
