@@ -144,6 +144,7 @@ class Geometry(dj.Computed):
             "D206",
             "D207",
             "D208",
+            "D220",
         }:
             self._make_design2(key)
         else:
