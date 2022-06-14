@@ -8,9 +8,7 @@ RUN \
 
 # Copy user's local fork of elements and workflow
 COPY --chown=anaconda:anaconda ./setup.py ./requirements.txt ./README.md ./
-COPY --chown=anaconda:anaconda scripts ./scripts
 COPY --chown=anaconda:anaconda ./neurophotonics ./neurophotonics
-COPY --chown=anaconda:anaconda ./workdir ./workdir
 
 # Install the workflow
 RUN \
