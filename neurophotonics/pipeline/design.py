@@ -67,7 +67,7 @@ class Design(dj.Lookup):
             "design_description": "Steer 30 randomized directions. 30-degree-beam. 50um scattering length",
         },
         {
-            "design": "231",
+            "design": "D231",
             "design_description": "Steer 30. 30-degree beam. 50um scattering length",
         },
     ]
