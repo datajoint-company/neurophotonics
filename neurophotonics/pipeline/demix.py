@@ -52,7 +52,9 @@ class IlluminationCycle(dj.Computed):
         target_rank = 150_000 * volume  # rule of thumb
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
 
-        baseframe = 5 if key["design"] in ["D205", "D206", "D207", "D208"] else 2
+        baseframe = (
+            5 if key["design"] in ["D205", "D206", "D207", "D208", "D220"] else 2
+        )
         nframes = max(baseframe, int(np.ceil(target_rank / detection.shape[0])))
 
         qq = emission @ detection.T
@@ -94,9 +96,7 @@ class Demix(dj.Computed):
         total_power_limit = 0.04  # Max watts to the brain
         max_emitter_power = 1e-4  # 100 uW
         dark_noise = 100  # counts per second
-        detector_quantum_efficiency = (
-            0.3 if int(key["design"][-1]) in [5, 6, 7, 8] else 0.5
-        )
+        detector_quantum_efficiency = 0.3
 
         # load the emission and detection matrices
         npoints, volume = (Tissue & key).fetch1("npoints", "volume")
