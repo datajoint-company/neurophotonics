@@ -322,6 +322,7 @@ class Geometry(dj.Computed):
                     checkerboard = np.ones_like(checkerboard)
                 tops = checkerboard[:, None] * top
             else:
+                np.random.seed(42)
                 criss = np.random.randint(2, size=nrows * ncolumns) * 2 - 1
                 cross = np.random.random(size=nrows * ncolumns) < 1 / 3
                 tops = np.array(np.cross(top, norm) if t else top for t in cross)
