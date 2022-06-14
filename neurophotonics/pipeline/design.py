@@ -357,13 +357,6 @@ class Geometry(dj.Computed):
         ) * 2 - 1
 
     @staticmethod
-    def _make_randomboard(nrows, ncolumns):
-        return (
-            np.random.randint(2, size=nrows * ncolumns) * 2 - 1,
-            np.random.random(size=nrows * ncolumns) < 1 / 3,
-        )
-
-    @staticmethod
     def _make_dpixels(nrows, ncolumns):
         return np.vstack(
             [
