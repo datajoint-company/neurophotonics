@@ -58,6 +58,10 @@ class Design(dj.Lookup):
             "design": "D208",
             "design_description": "Steer 45. 30-degree-beam. 50um scattering length",
         },
+        {
+            "design": "D220",
+            "design_description": "Steer 45 randomized directions. 45-degree-beam. 50um scattering length",
+        },
     ]
 
 
@@ -116,6 +120,8 @@ class Geometry(dj.Computed):
             """
 
     def make(self, key):
+        np.random.seed(42)
+
         self.insert1(key)
 
         if key["design"] in {
@@ -252,7 +258,15 @@ class Geometry(dj.Computed):
             )
 
             esim = dict(
-                D201=0, D202=4, D203=1, D204=5, D205=6, D206=10, D207=7, D208=11
+                D201=0,
+                D202=4,
+                D203=1,
+                D204=5,
+                D205=6,
+                D206=10,
+                D207=7,
+                D208=11,
+                D220=11,
             )[key["design"]]
 
             polygon = np.float32(
@@ -304,10 +318,19 @@ class Geometry(dj.Computed):
             nrows = shank_length / pixel_spacing
             centers = self._make_epixels(nrows, ncolumns)
             centers = rotate.apply(centers * pixel_spacing) + translate
-            checkerboard = self._make_checkerboard(nrows, ncolumns)
-            if shank < 2:  # two side shanks angled only one way
-                checkerboard = np.ones_like(checkerboard)
-            tops = checkerboard[:, None] * top
+            if key["design"] != "D220":
+                checkerboard = self._make_checkerboard(nrows, ncolumns)
+                if shank < 2:  # two side shanks angled only one way
+                    checkerboard = np.ones_like(checkerboard)
+                tops = checkerboard[:, None] * top
+            else:
+                tops = np.array(
+                    [
+                        (np.random.randint(2) * 2 - 1)
+                        * (np.cross(top, norm) if np.random.random() < 1 / 3 else top)
+                        for _ in range(nrows * ncolumns)
+                    ]
+                )
 
             self.EPixel.insert(
                 dict(
