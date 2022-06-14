@@ -329,7 +329,7 @@ class Geometry(dj.Computed):
                     [
                         (np.random.randint(2) * 2 - 1)
                         * (np.cross(top, norm) if np.random.random() < 1 / 3 else top)
-                        for _ in range(nrows * ncolumns)
+                        for _ in range(int(nrows * ncolumns))
                     ]
                 )
 
