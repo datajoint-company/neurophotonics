@@ -53,7 +53,9 @@ class IlluminationCycle(dj.Computed):
         illumination = np.identity(emission.shape[0], dtype=np.uint8)
 
         baseframe = (
-            5 if key["design"] in ["D205", "D206", "D207", "D208", "D220"] else 2
+            5
+            if key["design"] in ["D205", "D206", "D207", "D208", "D220", "D230"]
+            else 2
         )
         nframes = max(baseframe, int(np.ceil(target_rank / detection.shape[0])))
 
