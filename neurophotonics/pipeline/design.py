@@ -293,7 +293,7 @@ class Geometry(dj.Computed):
             # D-Pixels
             pixel_size = 5
             ncolumns = 22
-            nrows = shank_length / pixel_size  # number of rows
+            nrows = int(shank_length / pixel_size)  # number of rows
             centers = self._make_dpixels(nrows, ncolumns)
             centers = rotate.apply(centers * pixel_size) + translate
             self.DPixel.insert(
@@ -329,7 +329,7 @@ class Geometry(dj.Computed):
                     [
                         (np.random.randint(2) * 2 - 1)
                         * (np.cross(top, norm) if np.random.random() < 1 / 3 else top)
-                        for _ in range(int(nrows * ncolumns))
+                        for _ in range(nrows * ncolumns)
                     ]
                 )
 
