@@ -316,7 +316,7 @@ class Geometry(dj.Computed):
             pixel_size = 10
             pixel_spacing = 20
             ncolumns = 5
-            nrows = shank_length / pixel_spacing
+            nrows = int(shank_length / pixel_spacing)
             centers = self._make_epixels(nrows, ncolumns)
             centers = rotate.apply(centers * pixel_spacing) + translate
             if key["design"] != "D220":
