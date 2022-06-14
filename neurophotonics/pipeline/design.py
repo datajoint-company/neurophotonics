@@ -120,6 +120,8 @@ class Geometry(dj.Computed):
             """
 
     def make(self, key):
+        np.random.seed(42)
+
         self.insert1(key)
 
         if key["design"] in {
@@ -242,8 +244,6 @@ class Geometry(dj.Computed):
                 )
 
     def _make_design2(self, key):
-        np.random.seed(42)
-
         shank_width = 150
         shank_length = 1200
         separation = 150
