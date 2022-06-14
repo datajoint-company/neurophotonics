@@ -242,6 +242,8 @@ class Geometry(dj.Computed):
                 )
 
     def _make_design2(self, key):
+        np.random.seed(42)
+
         shank_width = 150
         shank_length = 1200
         separation = 150
@@ -322,7 +324,6 @@ class Geometry(dj.Computed):
                     checkerboard = np.ones_like(checkerboard)
                 tops = checkerboard[:, None] * top
             else:
-                np.random.seed(42)
                 tops = np.array(
                     [
                         (np.random.randint(2) * 2 - 1)
