@@ -323,10 +323,13 @@ class Geometry(dj.Computed):
                 tops = checkerboard[:, None] * top
             else:
                 np.random.seed(42)
-                criss = np.random.randint(2, size=nrows * ncolumns) * 2 - 1
-                cross = np.random.random(size=nrows * ncolumns) < 1 / 3
-                tops = np.array(np.cross(top, norm) if t else top for t in cross)
-                tops = criss[:, None] * tops
+                tops = np.array(
+                    [
+                        (np.random.randint(2) * 2 - 1)
+                        * (np.cross(top, norm) if np.random.random() < 1 / 3 else top)
+                        for _ in range(nrows * ncolumns)
+                    ]
+                )
 
             self.EPixel.insert(
                 dict(
