@@ -72,7 +72,7 @@ class Design(dj.Lookup):
         },
         {
             "design": "D232",
-            "design_description": "Steer 30. 30-degree beam. 50um scattering length. 10 Frames",
+            "design_description": "Steer 30. 30-degree beam. 50um scattering length. 15 Frames",
         },
     ]
 
