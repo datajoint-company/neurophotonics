@@ -70,6 +70,10 @@ class Design(dj.Lookup):
             "design": "D231",
             "design_description": "Steer 30. 30-degree beam. 50um scattering length",
         },
+        {
+            "design": "D232",
+            "design_description": "Steer 30. 30-degree beam. 50um scattering length. 10 Frames",
+        },
     ]
 
 
@@ -155,6 +159,7 @@ class Geometry(dj.Computed):
             "D220",
             "D230",
             "D231",
+            "D232",
         }:
             self._make_design2(key)
         else:
@@ -280,6 +285,7 @@ class Geometry(dj.Computed):
                 D220=11,
                 D230=9,
                 D231=9,
+                D232=9,
             )[key["design"]]
 
             polygon = np.float32(
